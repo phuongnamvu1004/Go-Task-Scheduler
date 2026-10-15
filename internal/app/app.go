@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/application"
@@ -16,7 +18,7 @@ import (
 	httpapi "github.com/phuongnamvu1004/Go-Task-Scheduler/internal/interfaces/http"
 )
 
-// App wires together all components and manages their lifecycle.
+// App wires all components together and manages their lifecycle.
 type App struct {
 	cfg    config.Config
 	db     *pgxpool.Pool
@@ -33,23 +35,24 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	jobRepo := postgres.NewJobRepository(db)
 	jobService := application.NewJobService(jobRepo)
 
-	mux := http.NewServeMux()
-	httpapi.NewHealthHandler().RegisterRoutes(mux)
-	httpapi.NewJobHandler(jobService).RegisterRoutes(mux)
+	router := chi.NewRouter()
+	router.Use(middleware.Logger, middleware.Recoverer)
+	httpapi.NewHealthHandler().RegisterRoutes(router)
+	httpapi.NewJobHandler(jobService).RegisterRoutes(router)
 
 	return &App{
 		cfg: cfg,
 		db:  db,
 		server: &http.Server{
 			Addr:              ":" + cfg.HTTP.Port,
-			Handler:           mux,
+			Handler:           router,
 			ReadHeaderTimeout: 5 * time.Second,
 		},
 	}, nil
 }
 
-// Run starts the app and blocks until ctx is cancelled or the server fails,
-// then shuts everything down gracefully.
+// Run serves until ctx is cancelled or the server fails, then shuts down
+// gracefully.
 func (a *App) Run(ctx context.Context) error {
 	defer a.db.Close()
 

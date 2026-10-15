@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -10,8 +11,11 @@ import (
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/config"
 )
 
-// NewPool opens a connection pool, makes sure the application schema exists,
-// and sets it as the default search_path for every connection.
+//go:embed schema.sql
+var schemaSQL string
+
+// NewPool connects to Postgres, uses cfg.Schema as the search_path, and
+// creates the schema and tables if missing.
 func NewPool(ctx context.Context, cfg config.DatabaseConfig) (*pgxpool.Pool, error) {
 	poolCfg, err := pgxpool.ParseConfig(cfg.DSN())
 	if err != nil {
@@ -33,6 +37,11 @@ func NewPool(ctx context.Context, cfg config.DatabaseConfig) (*pgxpool.Pool, err
 	if _, err := pool.Exec(ctx, "CREATE SCHEMA IF NOT EXISTS "+schema); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("create schema %s: %w", schema, err)
+	}
+
+	if _, err := pool.Exec(ctx, schemaSQL); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("apply schema.sql: %w", err)
 	}
 
 	return pool, nil

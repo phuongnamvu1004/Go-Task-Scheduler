@@ -10,7 +10,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Config holds all application configuration.
 type Config struct {
 	HTTP     HTTPConfig
 	Database DatabaseConfig
@@ -43,8 +42,8 @@ func (d DatabaseConfig) DSN() string {
 	return u.String()
 }
 
-// Load reads configuration from the environment, loading a .env file first
-// if one exists. Variables already set in the environment take precedence.
+// Load reads config from the environment and an optional .env file.
+// Variables already set in the environment take precedence.
 func Load() (Config, error) {
 	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return Config{}, fmt.Errorf("load .env: %w", err)

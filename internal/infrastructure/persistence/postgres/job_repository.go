@@ -2,13 +2,18 @@ package postgres
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/domain/job"
 )
 
 // JobRepository is the Postgres implementation of job.Repository.
+// The task is stored as task_type + task_config (JSONB).
 type JobRepository struct {
 	pool *pgxpool.Pool
 }
@@ -19,22 +24,119 @@ func NewJobRepository(pool *pgxpool.Pool) *JobRepository {
 	return &JobRepository{pool: pool}
 }
 
-func (r *JobRepository) Save(ctx context.Context, j *job.Job) error {
-	// TODO: implement
+const jobColumns = `id::text, name, schedule, status, task_type, task_config, created_at, updated_at`
+
+func (r *JobRepository) Create(ctx context.Context, j *job.Job) error {
+	config, err := encodeTask(j.Task)
+	if err != nil {
+		return err
+	}
+
+	err = r.pool.QueryRow(ctx, `
+		INSERT INTO jobs (name, schedule, status, task_type, task_config, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING id::text`,
+		j.Name, j.Schedule, j.Status, j.Task.Type(), config, j.CreatedAt, j.UpdatedAt,
+	).Scan(&j.ID)
+	if err != nil {
+		return fmt.Errorf("insert job: %w", err)
+	}
+	return nil
+}
+
+func (r *JobRepository) Update(ctx context.Context, j *job.Job) error {
+	config, err := encodeTask(j.Task)
+	if err != nil {
+		return err
+	}
+
+	tag, err := r.pool.Exec(ctx, `
+		UPDATE jobs
+		SET name = $2, schedule = $3, status = $4, task_type = $5, task_config = $6, updated_at = $7
+		WHERE id = $1`,
+		j.ID, j.Name, j.Schedule, j.Status, j.Task.Type(), config, j.UpdatedAt,
+	)
+	if err != nil {
+		return notFoundOr(fmt.Errorf("update job: %w", err))
+	}
+	if tag.RowsAffected() == 0 {
+		return job.ErrNotFound
+	}
 	return nil
 }
 
 func (r *JobRepository) FindByID(ctx context.Context, id string) (*job.Job, error) {
-	// TODO: implement
-	return nil, nil
+	row := r.pool.QueryRow(ctx, `SELECT `+jobColumns+` FROM jobs WHERE id = $1`, id)
+	j, err := scanJob(row)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, job.ErrNotFound
+	}
+	if err != nil {
+		return nil, notFoundOr(fmt.Errorf("find job: %w", err))
+	}
+	return j, nil
 }
 
-func (r *JobRepository) FindAll(ctx context.Context) ([]*job.Job, error) {
-	// TODO: implement
-	return nil, nil
+func (r *JobRepository) FindAll(ctx context.Context, filter job.ListFilter) ([]*job.Job, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT `+jobColumns+` FROM jobs
+		WHERE ($1 = '' OR task_type = $1)
+		ORDER BY created_at`,
+		string(filter.TaskType),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list jobs: %w", err)
+	}
+	defer rows.Close()
+
+	jobs := []*job.Job{}
+	for rows.Next() {
+		j, err := scanJob(rows)
+		if err != nil {
+			return nil, fmt.Errorf("list jobs: %w", err)
+		}
+		jobs = append(jobs, j)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list jobs: %w", err)
+	}
+	return jobs, nil
 }
 
 func (r *JobRepository) Delete(ctx context.Context, id string) error {
-	// TODO: implement
+	tag, err := r.pool.Exec(ctx, `DELETE FROM jobs WHERE id = $1`, id)
+	if err != nil {
+		return notFoundOr(fmt.Errorf("delete job: %w", err))
+	}
+	if tag.RowsAffected() == 0 {
+		return job.ErrNotFound
+	}
 	return nil
+}
+
+func scanJob(row pgx.Row) (*job.Job, error) {
+	var (
+		j        job.Job
+		taskType job.TaskType
+		config   []byte
+	)
+	err := row.Scan(&j.ID, &j.Name, &j.Schedule, &j.Status, &taskType, &config, &j.CreatedAt, &j.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	j.Task, err = decodeTask(taskType, config)
+	if err != nil {
+		return nil, err
+	}
+	return &j, nil
+}
+
+// notFoundOr treats a malformed (non-UUID) ID as job.ErrNotFound.
+func notFoundOr(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "22P02" { // invalid_text_representation
+		return job.ErrNotFound
+	}
+	return err
 }
