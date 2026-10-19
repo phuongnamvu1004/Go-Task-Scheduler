@@ -1,21 +1,20 @@
-package jobs
+package http
 
 import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/application"
-	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/domain/job"
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job"
 )
 
 // Handler owns the /jobs route group. Each task type has its own handler
 // file in this package (e.g. webhook_handler.go) mounted as a sub-group.
 type Handler struct {
-	service *application.JobService
+	service *job.Service
 }
 
-func NewHandler(service *application.JobService) *Handler {
+func NewHandler(service *job.Service) *Handler {
 	return &Handler{service: service}
 }
 
@@ -35,7 +34,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 //	@Failure	500	{object}	errorResponse
 //	@Router		/jobs [get]
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	jobs, err := h.service.ListJobs(r.Context(), job.ListFilter{})
+	jobs, err := h.service.List(r.Context(), job.ListFilter{})
 	if err != nil {
 		writeError(w, r, err)
 		return

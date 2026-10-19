@@ -12,11 +12,12 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/application"
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/config"
-	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/infrastructure/persistence/postgres"
-	httpapi "github.com/phuongnamvu1004/Go-Task-Scheduler/internal/interfaces/http"
-	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/interfaces/http/jobs"
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job"
+	jobhttp "github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/http"
+	jobpostgres "github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/postgres"
+	platformhttp "github.com/phuongnamvu1004/Go-Task-Scheduler/internal/platform/http"
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/platform/postgres"
 )
 
 // App wires all components together and manages their lifecycle.
@@ -33,14 +34,13 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		return nil, err
 	}
 
-	jobRepo := postgres.NewJobRepository(db)
-	jobService := application.NewJobService(jobRepo)
+	jobService := job.NewService(jobpostgres.NewRepository(db))
 
 	router := chi.NewRouter()
 	router.Use(middleware.Logger, middleware.Recoverer)
-	httpapi.NewHealthHandler().RegisterRoutes(router)
-	httpapi.NewDocsHandler().RegisterRoutes(router)
-	jobs.NewHandler(jobService).RegisterRoutes(router)
+	platformhttp.NewHealthHandler().RegisterRoutes(router)
+	platformhttp.NewDocsHandler().RegisterRoutes(router)
+	jobhttp.NewHandler(jobService).RegisterRoutes(router)
 
 	return &App{
 		cfg: cfg,

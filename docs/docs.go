@@ -30,14 +30,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/jobs.jobResponse"
+                                "$ref": "#/definitions/http.jobResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/jobs.errorResponse"
+                            "$ref": "#/definitions/http.errorResponse"
                         }
                     }
                 }
@@ -60,13 +60,13 @@ const docTemplate = `{
                             "items": {
                                 "allOf": [
                                     {
-                                        "$ref": "#/definitions/jobs.jobResponse"
+                                        "$ref": "#/definitions/http.jobResponse"
                                     },
                                     {
                                         "type": "object",
                                         "properties": {
                                             "task": {
-                                                "$ref": "#/definitions/job.WebhookTask"
+                                                "$ref": "#/definitions/task.Webhook"
                                             }
                                         }
                                     }
@@ -77,7 +77,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/jobs.errorResponse"
+                            "$ref": "#/definitions/http.errorResponse"
                         }
                     }
                 }
@@ -100,7 +100,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/jobs.webhookJobRequest"
+                            "$ref": "#/definitions/http.webhookJobRequest"
                         }
                     }
                 ],
@@ -110,13 +110,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/jobs.jobResponse"
+                                    "$ref": "#/definitions/http.jobResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "task": {
-                                            "$ref": "#/definitions/job.WebhookTask"
+                                            "$ref": "#/definitions/task.Webhook"
                                         }
                                     }
                                 }
@@ -126,7 +126,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/jobs.errorResponse"
+                            "$ref": "#/definitions/http.errorResponse"
                         }
                     }
                 }
@@ -156,13 +156,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/jobs.jobResponse"
+                                    "$ref": "#/definitions/http.jobResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "task": {
-                                            "$ref": "#/definitions/job.WebhookTask"
+                                            "$ref": "#/definitions/task.Webhook"
                                         }
                                     }
                                 }
@@ -172,7 +172,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/jobs.errorResponse"
+                            "$ref": "#/definitions/http.errorResponse"
                         }
                     }
                 }
@@ -203,7 +203,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/jobs.webhookJobPatch"
+                            "$ref": "#/definitions/http.webhookJobPatch"
                         }
                     }
                 ],
@@ -213,13 +213,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/jobs.jobResponse"
+                                    "$ref": "#/definitions/http.jobResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "task": {
-                                            "$ref": "#/definitions/job.WebhookTask"
+                                            "$ref": "#/definitions/task.Webhook"
                                         }
                                     }
                                 }
@@ -229,13 +229,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/jobs.errorResponse"
+                            "$ref": "#/definitions/http.errorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/jobs.errorResponse"
+                            "$ref": "#/definitions/http.errorResponse"
                         }
                     }
                 }
@@ -261,7 +261,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/jobs.errorResponse"
+                            "$ref": "#/definitions/http.errorResponse"
                         }
                     }
                 }
@@ -291,13 +291,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/jobs.jobResponse"
+                                    "$ref": "#/definitions/http.jobResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "task": {
-                                            "$ref": "#/definitions/job.WebhookTask"
+                                            "$ref": "#/definitions/task.Webhook"
                                         }
                                     }
                                 }
@@ -307,7 +307,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/jobs.errorResponse"
+                            "$ref": "#/definitions/http.errorResponse"
                         }
                     }
                 }
@@ -337,13 +337,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/jobs.jobResponse"
+                                    "$ref": "#/definitions/http.jobResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "task": {
-                                            "$ref": "#/definitions/job.WebhookTask"
+                                            "$ref": "#/definitions/task.Webhook"
                                         }
                                     }
                                 }
@@ -353,7 +353,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/jobs.errorResponse"
+                            "$ref": "#/definitions/http.errorResponse"
                         }
                     }
                 }
@@ -361,64 +361,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "job.HTTPMethod": {
-            "type": "string",
-            "enum": [
-                "GET",
-                "POST",
-                "PUT",
-                "PATCH",
-                "DELETE"
-            ],
-            "x-enum-varnames": [
-                "MethodGET",
-                "MethodPOST",
-                "MethodPUT",
-                "MethodPATCH",
-                "MethodDELETE"
-            ]
-        },
-        "job.Status": {
-            "type": "string",
-            "enum": [
-                "active",
-                "paused"
-            ],
-            "x-enum-varnames": [
-                "StatusActive",
-                "StatusPaused"
-            ]
-        },
-        "job.TaskType": {
-            "type": "string",
-            "enum": [
-                "webhook"
-            ],
-            "x-enum-varnames": [
-                "TaskWebhook"
-            ]
-        },
-        "job.WebhookTask": {
-            "type": "object",
-            "properties": {
-                "body": {
-                    "type": "string"
-                },
-                "headers": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "method": {
-                    "$ref": "#/definitions/job.HTTPMethod"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "jobs.errorResponse": {
+        "http.errorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -426,7 +369,7 @@ const docTemplate = `{
                 }
             }
         },
-        "jobs.jobResponse": {
+        "http.jobResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -446,14 +389,14 @@ const docTemplate = `{
                 },
                 "task": {},
                 "task_type": {
-                    "$ref": "#/definitions/job.TaskType"
+                    "$ref": "#/definitions/task.Type"
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "jobs.webhookJobPatch": {
+        "http.webhookJobPatch": {
             "type": "object",
             "properties": {
                 "name": {
@@ -463,11 +406,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "task": {
-                    "$ref": "#/definitions/jobs.webhookTaskPatch"
+                    "$ref": "#/definitions/http.webhookTaskPatch"
                 }
             }
         },
-        "jobs.webhookJobRequest": {
+        "http.webhookJobRequest": {
             "type": "object",
             "properties": {
                 "name": {
@@ -477,11 +420,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "task": {
-                    "$ref": "#/definitions/job.WebhookTask"
+                    "$ref": "#/definitions/task.Webhook"
                 }
             }
         },
-        "jobs.webhookTaskPatch": {
+        "http.webhookTaskPatch": {
             "type": "object",
             "properties": {
                 "body": {
@@ -494,7 +437,64 @@ const docTemplate = `{
                     }
                 },
                 "method": {
-                    "$ref": "#/definitions/job.HTTPMethod"
+                    "$ref": "#/definitions/task.HTTPMethod"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "job.Status": {
+            "type": "string",
+            "enum": [
+                "active",
+                "paused"
+            ],
+            "x-enum-varnames": [
+                "StatusActive",
+                "StatusPaused"
+            ]
+        },
+        "task.HTTPMethod": {
+            "type": "string",
+            "enum": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+            ],
+            "x-enum-varnames": [
+                "MethodGET",
+                "MethodPOST",
+                "MethodPUT",
+                "MethodPATCH",
+                "MethodDELETE"
+            ]
+        },
+        "task.Type": {
+            "type": "string",
+            "enum": [
+                "webhook"
+            ],
+            "x-enum-varnames": [
+                "TypeWebhook"
+            ]
+        },
+        "task.Webhook": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "headers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "method": {
+                    "$ref": "#/definitions/task.HTTPMethod"
                 },
                 "url": {
                     "type": "string"

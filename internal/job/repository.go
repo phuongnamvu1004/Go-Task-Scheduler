@@ -1,10 +1,14 @@
 package job
 
-import "context"
+import (
+	"context"
+
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/task"
+)
 
 // ListFilter narrows FindAll results. Zero-value fields are ignored.
 type ListFilter struct {
-	TaskType TaskType
+	TaskType task.Type
 }
 
 // Repository persists Jobs. Update, FindByID and Delete return ErrNotFound

@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/domain/job"
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/task"
 )
 
 // encodeTask turns a task into the JSON stored in task_config.
-func encodeTask(t job.Task) ([]byte, error) {
+func encodeTask(t task.Task) ([]byte, error) {
 	data, err := json.Marshal(t)
 	if err != nil {
 		return nil, fmt.Errorf("encode %s task: %w", t.Type(), err)
@@ -18,11 +18,11 @@ func encodeTask(t job.Task) ([]byte, error) {
 
 // decodeTask rebuilds the concrete task from task_type. Add a case for
 // each new task type.
-func decodeTask(taskType job.TaskType, data []byte) (job.Task, error) {
-	var t job.Task
+func decodeTask(taskType task.Type, data []byte) (task.Task, error) {
+	var t task.Task
 	switch taskType {
-	case job.TaskWebhook:
-		t = &job.WebhookTask{}
+	case task.TypeWebhook:
+		t = &task.Webhook{}
 	default:
 		return nil, fmt.Errorf("unknown task type %q", taskType)
 	}

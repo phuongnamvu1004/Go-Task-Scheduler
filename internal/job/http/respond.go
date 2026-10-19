@@ -1,4 +1,4 @@
-package jobs
+package http
 
 import (
 	"encoding/json"
@@ -8,21 +8,22 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/domain/job"
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job"
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/task"
 )
 
 const maxBodyBytes = 1 << 20 // 1 MiB
 
 // jobResponse is the JSON shape of a job for every task type.
 type jobResponse struct {
-	ID        string       `json:"id"`
-	Name      string       `json:"name"`
-	Schedule  string       `json:"schedule"`
-	Status    job.Status   `json:"status"`
-	TaskType  job.TaskType `json:"task_type"`
-	Task      job.Task     `json:"task"`
-	CreatedAt time.Time    `json:"created_at"`
-	UpdatedAt time.Time    `json:"updated_at"`
+	ID        string     `json:"id"`
+	Name      string     `json:"name"`
+	Schedule  string     `json:"schedule"`
+	Status    job.Status `json:"status"`
+	TaskType  task.Type  `json:"task_type"`
+	Task      task.Task  `json:"task"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 }
 
 type errorResponse struct {

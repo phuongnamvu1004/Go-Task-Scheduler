@@ -1,52 +1,11 @@
 basePath: /
 definitions:
-  job.HTTPMethod:
-    enum:
-    - GET
-    - POST
-    - PUT
-    - PATCH
-    - DELETE
-    type: string
-    x-enum-varnames:
-    - MethodGET
-    - MethodPOST
-    - MethodPUT
-    - MethodPATCH
-    - MethodDELETE
-  job.Status:
-    enum:
-    - active
-    - paused
-    type: string
-    x-enum-varnames:
-    - StatusActive
-    - StatusPaused
-  job.TaskType:
-    enum:
-    - webhook
-    type: string
-    x-enum-varnames:
-    - TaskWebhook
-  job.WebhookTask:
-    properties:
-      body:
-        type: string
-      headers:
-        additionalProperties:
-          type: string
-        type: object
-      method:
-        $ref: '#/definitions/job.HTTPMethod'
-      url:
-        type: string
-    type: object
-  jobs.errorResponse:
+  http.errorResponse:
     properties:
       error:
         type: string
     type: object
-  jobs.jobResponse:
+  http.jobResponse:
     properties:
       created_at:
         type: string
@@ -60,29 +19,29 @@ definitions:
         $ref: '#/definitions/job.Status'
       task: {}
       task_type:
-        $ref: '#/definitions/job.TaskType'
+        $ref: '#/definitions/task.Type'
       updated_at:
         type: string
     type: object
-  jobs.webhookJobPatch:
+  http.webhookJobPatch:
     properties:
       name:
         type: string
       schedule:
         type: string
       task:
-        $ref: '#/definitions/jobs.webhookTaskPatch'
+        $ref: '#/definitions/http.webhookTaskPatch'
     type: object
-  jobs.webhookJobRequest:
+  http.webhookJobRequest:
     properties:
       name:
         type: string
       schedule:
         type: string
       task:
-        $ref: '#/definitions/job.WebhookTask'
+        $ref: '#/definitions/task.Webhook'
     type: object
-  jobs.webhookTaskPatch:
+  http.webhookTaskPatch:
     properties:
       body:
         type: string
@@ -91,7 +50,48 @@ definitions:
           type: string
         type: object
       method:
-        $ref: '#/definitions/job.HTTPMethod'
+        $ref: '#/definitions/task.HTTPMethod'
+      url:
+        type: string
+    type: object
+  job.Status:
+    enum:
+    - active
+    - paused
+    type: string
+    x-enum-varnames:
+    - StatusActive
+    - StatusPaused
+  task.HTTPMethod:
+    enum:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    type: string
+    x-enum-varnames:
+    - MethodGET
+    - MethodPOST
+    - MethodPUT
+    - MethodPATCH
+    - MethodDELETE
+  task.Type:
+    enum:
+    - webhook
+    type: string
+    x-enum-varnames:
+    - TypeWebhook
+  task.Webhook:
+    properties:
+      body:
+        type: string
+      headers:
+        additionalProperties:
+          type: string
+        type: object
+      method:
+        $ref: '#/definitions/task.HTTPMethod'
       url:
         type: string
     type: object
@@ -110,12 +110,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/jobs.jobResponse'
+              $ref: '#/definitions/http.jobResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/jobs.errorResponse'
+            $ref: '#/definitions/http.errorResponse'
       summary: List jobs of every task type
       tags:
       - jobs
@@ -129,16 +129,16 @@ paths:
           schema:
             items:
               allOf:
-              - $ref: '#/definitions/jobs.jobResponse'
+              - $ref: '#/definitions/http.jobResponse'
               - properties:
                   task:
-                    $ref: '#/definitions/job.WebhookTask'
+                    $ref: '#/definitions/task.Webhook'
                 type: object
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/jobs.errorResponse'
+            $ref: '#/definitions/http.errorResponse'
       summary: List webhook jobs
       tags:
       - webhook jobs
@@ -151,7 +151,7 @@ paths:
         name: job
         required: true
         schema:
-          $ref: '#/definitions/jobs.webhookJobRequest'
+          $ref: '#/definitions/http.webhookJobRequest'
       produces:
       - application/json
       responses:
@@ -159,15 +159,15 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/jobs.jobResponse'
+            - $ref: '#/definitions/http.jobResponse'
             - properties:
                 task:
-                  $ref: '#/definitions/job.WebhookTask'
+                  $ref: '#/definitions/task.Webhook'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/jobs.errorResponse'
+            $ref: '#/definitions/http.errorResponse'
       summary: Create a webhook job
       tags:
       - webhook jobs
@@ -185,7 +185,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/jobs.errorResponse'
+            $ref: '#/definitions/http.errorResponse'
       summary: Delete a webhook job
       tags:
       - webhook jobs
@@ -203,15 +203,15 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/jobs.jobResponse'
+            - $ref: '#/definitions/http.jobResponse'
             - properties:
                 task:
-                  $ref: '#/definitions/job.WebhookTask'
+                  $ref: '#/definitions/task.Webhook'
               type: object
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/jobs.errorResponse'
+            $ref: '#/definitions/http.errorResponse'
       summary: Get a webhook job
       tags:
       - webhook jobs
@@ -231,7 +231,7 @@ paths:
         name: job
         required: true
         schema:
-          $ref: '#/definitions/jobs.webhookJobPatch'
+          $ref: '#/definitions/http.webhookJobPatch'
       produces:
       - application/json
       responses:
@@ -239,19 +239,19 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/jobs.jobResponse'
+            - $ref: '#/definitions/http.jobResponse'
             - properties:
                 task:
-                  $ref: '#/definitions/job.WebhookTask'
+                  $ref: '#/definitions/task.Webhook'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/jobs.errorResponse'
+            $ref: '#/definitions/http.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/jobs.errorResponse'
+            $ref: '#/definitions/http.errorResponse'
       summary: Update a webhook job
       tags:
       - webhook jobs
@@ -270,15 +270,15 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/jobs.jobResponse'
+            - $ref: '#/definitions/http.jobResponse'
             - properties:
                 task:
-                  $ref: '#/definitions/job.WebhookTask'
+                  $ref: '#/definitions/task.Webhook'
               type: object
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/jobs.errorResponse'
+            $ref: '#/definitions/http.errorResponse'
       summary: Pause a webhook job
       tags:
       - webhook jobs
@@ -297,15 +297,15 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/jobs.jobResponse'
+            - $ref: '#/definitions/http.jobResponse'
             - properties:
                 task:
-                  $ref: '#/definitions/job.WebhookTask'
+                  $ref: '#/definitions/task.Webhook'
               type: object
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/jobs.errorResponse'
+            $ref: '#/definitions/http.errorResponse'
       summary: Resume a paused webhook job
       tags:
       - webhook jobs

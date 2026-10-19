@@ -1,4 +1,4 @@
-package job
+package task
 
 import (
 	"errors"
@@ -25,22 +25,22 @@ func (m HTTPMethod) Valid() bool {
 	return false
 }
 
-// WebhookTask sends an HTTP request when its job runs. The JSON tags define
+// Webhook sends an HTTP request when its job runs. The JSON tags define
 // both the API and the stored format.
-type WebhookTask struct {
+type Webhook struct {
 	URL     string            `json:"url"`
 	Method  HTTPMethod        `json:"method"`
 	Headers map[string]string `json:"headers,omitempty"`
 	Body    string            `json:"body,omitempty"`
 }
 
-var _ Task = (*WebhookTask)(nil)
+var _ Task = (*Webhook)(nil)
 
-func (t *WebhookTask) Type() TaskType {
-	return TaskWebhook
+func (t *Webhook) Type() Type {
+	return TypeWebhook
 }
 
-func (t *WebhookTask) Validate() error {
+func (t *Webhook) Validate() error {
 	u, err := url.Parse(t.URL)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
 		return fmt.Errorf("webhook: invalid URL %q", t.URL)

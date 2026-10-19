@@ -1,4 +1,4 @@
-package jobs
+package http
 
 import (
 	"context"
@@ -6,17 +6,17 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/application"
-	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/domain/job"
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job"
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/task"
 )
 
 // WebhookHandler serves /jobs/webhook. Jobs of other task types are
 // reported as not found.
 type WebhookHandler struct {
-	service *application.JobService
+	service *job.Service
 }
 
-func NewWebhookHandler(service *application.JobService) *WebhookHandler {
+func NewWebhookHandler(service *job.Service) *WebhookHandler {
 	return &WebhookHandler{service: service}
 }
 
@@ -32,9 +32,9 @@ func (h *WebhookHandler) RegisterRoutes(r chi.Router) {
 }
 
 type webhookJobRequest struct {
-	Name     string          `json:"name"`
-	Schedule string          `json:"schedule"`
-	Task     job.WebhookTask `json:"task"`
+	Name     string       `json:"name"`
+	Schedule string       `json:"schedule"`
+	Task     task.Webhook `json:"task"`
 }
 
 // webhookJobPatch is a partial update: fields left out of the body keep
@@ -47,14 +47,14 @@ type webhookJobPatch struct {
 
 type webhookTaskPatch struct {
 	URL     *string            `json:"url"`
-	Method  *job.HTTPMethod    `json:"method"`
+	Method  *task.HTTPMethod   `json:"method"`
 	Headers *map[string]string `json:"headers"`
 	Body    *string            `json:"body"`
 }
 
 // apply returns j's current values with the patch laid over them.
-func (p webhookJobPatch) apply(j *job.Job) application.UpdateJobInput {
-	in := application.UpdateJobInput{Name: j.Name, Schedule: j.Schedule}
+func (p webhookJobPatch) apply(j *job.Job) job.UpdateInput {
+	in := job.UpdateInput{Name: j.Name, Schedule: j.Schedule}
 	if p.Name != nil {
 		in.Name = *p.Name
 	}
@@ -62,22 +62,22 @@ func (p webhookJobPatch) apply(j *job.Job) application.UpdateJobInput {
 		in.Schedule = *p.Schedule
 	}
 
-	task := *j.Task.(*job.WebhookTask)
+	wt := *j.Task.(*task.Webhook)
 	if t := p.Task; t != nil {
 		if t.URL != nil {
-			task.URL = *t.URL
+			wt.URL = *t.URL
 		}
 		if t.Method != nil {
-			task.Method = *t.Method
+			wt.Method = *t.Method
 		}
 		if t.Headers != nil {
-			task.Headers = *t.Headers
+			wt.Headers = *t.Headers
 		}
 		if t.Body != nil {
-			task.Body = *t.Body
+			wt.Body = *t.Body
 		}
 	}
-	in.Task = &task
+	in.Task = &wt
 	return in
 }
 
@@ -88,7 +88,7 @@ func (p webhookJobPatch) apply(j *job.Job) application.UpdateJobInput {
 //	@Accept		json
 //	@Produce	json
 //	@Param		job	body		webhookJobRequest	true	"Webhook job"
-//	@Success	201	{object}	jobResponse{task=job.WebhookTask}
+//	@Success	201	{object}	jobResponse{task=task.Webhook}
 //	@Failure	400	{object}	errorResponse
 //	@Router		/jobs/webhook [post]
 func (h *WebhookHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -98,7 +98,7 @@ func (h *WebhookHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	j, err := h.service.CreateJob(r.Context(), application.CreateJobInput{
+	j, err := h.service.Create(r.Context(), job.CreateInput{
 		Name:     req.Name,
 		Schedule: req.Schedule,
 		Task:     &req.Task,
@@ -117,11 +117,11 @@ func (h *WebhookHandler) Create(w http.ResponseWriter, r *http.Request) {
 //	@Summary	List webhook jobs
 //	@Tags		webhook jobs
 //	@Produce	json
-//	@Success	200	{array}		jobResponse{task=job.WebhookTask}
+//	@Success	200	{array}		jobResponse{task=task.Webhook}
 //	@Failure	500	{object}	errorResponse
 //	@Router		/jobs/webhook [get]
 func (h *WebhookHandler) List(w http.ResponseWriter, r *http.Request) {
-	jobs, err := h.service.ListJobs(r.Context(), job.ListFilter{TaskType: job.TaskWebhook})
+	jobs, err := h.service.List(r.Context(), job.ListFilter{TaskType: task.TypeWebhook})
 	if err != nil {
 		writeError(w, r, err)
 		return
@@ -135,7 +135,7 @@ func (h *WebhookHandler) List(w http.ResponseWriter, r *http.Request) {
 //	@Tags		webhook jobs
 //	@Produce	json
 //	@Param		id	path		string	true	"Job ID"
-//	@Success	200	{object}	jobResponse{task=job.WebhookTask}
+//	@Success	200	{object}	jobResponse{task=task.Webhook}
 //	@Failure	404	{object}	errorResponse
 //	@Router		/jobs/webhook/{id} [get]
 func (h *WebhookHandler) Get(w http.ResponseWriter, r *http.Request) {
@@ -156,7 +156,7 @@ func (h *WebhookHandler) Get(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Param			id	path		string			true	"Job ID"
 //	@Param			job	body		webhookJobPatch	true	"Fields to change"
-//	@Success		200	{object}	jobResponse{task=job.WebhookTask}
+//	@Success		200	{object}	jobResponse{task=task.Webhook}
 //	@Failure		400	{object}	errorResponse
 //	@Failure		404	{object}	errorResponse
 //	@Router			/jobs/webhook/{id} [put]
@@ -174,7 +174,7 @@ func (h *WebhookHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	j, err := h.service.UpdateJob(r.Context(), id, patch.apply(existing))
+	j, err := h.service.Update(r.Context(), id, patch.apply(existing))
 	if err != nil {
 		writeError(w, r, err)
 		return
@@ -196,7 +196,7 @@ func (h *WebhookHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, err)
 		return
 	}
-	if err := h.service.DeleteJob(r.Context(), id); err != nil {
+	if err := h.service.Delete(r.Context(), id); err != nil {
 		writeError(w, r, err)
 		return
 	}
@@ -209,11 +209,11 @@ func (h *WebhookHandler) Delete(w http.ResponseWriter, r *http.Request) {
 //	@Tags		webhook jobs
 //	@Produce	json
 //	@Param		id	path		string	true	"Job ID"
-//	@Success	200	{object}	jobResponse{task=job.WebhookTask}
+//	@Success	200	{object}	jobResponse{task=task.Webhook}
 //	@Failure	404	{object}	errorResponse
 //	@Router		/jobs/webhook/{id}/pause [post]
 func (h *WebhookHandler) Pause(w http.ResponseWriter, r *http.Request) {
-	h.changeStatus(w, r, h.service.PauseJob)
+	h.changeStatus(w, r, h.service.Pause)
 }
 
 // Resume godoc
@@ -222,11 +222,11 @@ func (h *WebhookHandler) Pause(w http.ResponseWriter, r *http.Request) {
 //	@Tags		webhook jobs
 //	@Produce	json
 //	@Param		id	path		string	true	"Job ID"
-//	@Success	200	{object}	jobResponse{task=job.WebhookTask}
+//	@Success	200	{object}	jobResponse{task=task.Webhook}
 //	@Failure	404	{object}	errorResponse
 //	@Router		/jobs/webhook/{id}/resume [post]
 func (h *WebhookHandler) Resume(w http.ResponseWriter, r *http.Request) {
-	h.changeStatus(w, r, h.service.ResumeJob)
+	h.changeStatus(w, r, h.service.Resume)
 }
 
 func (h *WebhookHandler) changeStatus(w http.ResponseWriter, r *http.Request, change func(context.Context, string) (*job.Job, error)) {
@@ -245,11 +245,11 @@ func (h *WebhookHandler) changeStatus(w http.ResponseWriter, r *http.Request, ch
 
 // find loads a job, returning job.ErrNotFound if it isn't a webhook job.
 func (h *WebhookHandler) find(ctx context.Context, id string) (*job.Job, error) {
-	j, err := h.service.GetJob(ctx, id)
+	j, err := h.service.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	if j.Task.Type() != job.TaskWebhook {
+	if j.Task.Type() != task.TypeWebhook {
 		return nil, job.ErrNotFound
 	}
 	return j, nil

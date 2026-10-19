@@ -3,6 +3,8 @@ package job
 import (
 	"fmt"
 	"time"
+
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/task"
 )
 
 // Job is the aggregate root: a Task that runs on a Schedule.
@@ -10,7 +12,7 @@ type Job struct {
 	ID        string
 	Name      string
 	Schedule  string // e.g. a cron expression
-	Task      Task
+	Task      task.Task
 	Status    Status
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -28,12 +30,12 @@ func (s Status) Valid() bool {
 }
 
 // NewJob returns a validated, active Job. Its ID is set when it is saved.
-func NewJob(name, schedule string, task Task) (*Job, error) {
+func NewJob(name, schedule string, t task.Task) (*Job, error) {
 	now := time.Now().UTC()
 	j := &Job{
 		Name:      name,
 		Schedule:  schedule,
-		Task:      task,
+		Task:      t,
 		Status:    StatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -66,15 +68,15 @@ func (j *Job) Validate() error {
 
 // Update replaces the name, schedule and task, keeping the same task type.
 // The job is unchanged if validation fails.
-func (j *Job) Update(name, schedule string, task Task) error {
-	if task != nil && j.Task != nil && task.Type() != j.Task.Type() {
-		return fmt.Errorf("%w: task type cannot change from %q to %q", ErrInvalid, j.Task.Type(), task.Type())
+func (j *Job) Update(name, schedule string, t task.Task) error {
+	if t != nil && j.Task != nil && t.Type() != j.Task.Type() {
+		return fmt.Errorf("%w: task type cannot change from %q to %q", ErrInvalid, j.Task.Type(), t.Type())
 	}
 
 	updated := *j
 	updated.Name = name
 	updated.Schedule = schedule
-	updated.Task = task
+	updated.Task = t
 	if err := updated.Validate(); err != nil {
 		return err
 	}

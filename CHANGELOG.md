@@ -19,6 +19,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Job handlers moved to `internal/interfaces/http/jobs/`, one file per task type.
   `JobHandler` → `jobs.Handler`, `WebhookJobHandler` → `jobs.WebhookHandler`.
 - Error responses use an `errorResponse` type (`{"error": "..."}`) so they appear in the API docs.
+- `PUT /jobs/webhook/{id}` is now a partial update: only the fields in the body change.
+- **Restructured by feature instead of by layer.** No behavior or API changes.
+  - `internal/job/`: domain model and use cases (was `domain/job/` + `application/`).
+    `application.JobService` → `job.Service`, with methods `Create`, `Get`, `List`, `Update`,
+    `Pause`, `Resume`, `Delete` (was `CreateJob`, `GetJob`, ...).
+  - `internal/job/task/`: `Task` interface and one file per task type (was `domain/job/task.go`,
+    `webhook_task.go`). `job.TaskType` → `task.Type`, `job.TaskWebhook` → `task.TypeWebhook`,
+    `job.WebhookTask` → `task.Webhook`, `job.HTTPMethod` → `task.HTTPMethod`.
+  - `internal/job/postgres/`: job repository (was `infrastructure/persistence/postgres/`).
+    `JobRepository` → `postgres.Repository`.
+  - `internal/job/http/`: `/jobs` handlers (was `interfaces/http/jobs/`).
+  - `internal/platform/postgres/`: connection pool, `schema.sql`, seed data.
+  - `internal/platform/http/`: health check and Swagger UI handlers.
 
 ## 2026-10-15
 

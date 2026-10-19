@@ -82,17 +82,20 @@ go build -o bin/scheduler ./cmd/scheduler
 
 ## Project structure
 
-The project follows a Domain-Driven Design layout:
+Code is organized by feature: each feature folder holds its domain model, use cases and adapters.
+Shared technical setup with no business logic lives in `platform/`.
 
 ```
-cmd/scheduler/                        # entry point: load config, handle signals, run the app
-docs/                                 # generated Swagger spec (do not edit by hand)
+cmd/scheduler/              # entry point: load config, handle signals, run the app
+docs/                       # generated Swagger spec (do not edit by hand)
 internal/
-  app/                                # wires all components and manages their lifecycle
-  config/                             # Config struct, loaded from env / .env
-  domain/job/                         # Job aggregate and Repository interface
-  application/                        # use cases (JobService)
-  infrastructure/persistence/postgres/  # Postgres connection pool and Repository implementation
-  interfaces/http/                    # health and Swagger UI routes
-    jobs/                             # /jobs routes: one handler file per task type
+  app/                      # wires all components and manages their lifecycle
+  config/                   # Config struct, loaded from env / .env
+  job/                      # job feature: Job, Repository interface, Service
+    task/                   # Task interface + one file per task type (webhook.go, ...)
+    postgres/               # Postgres implementation of job.Repository
+    http/                   # /jobs routes: one handler file per task type
+  platform/
+    postgres/               # connection pool, schema.sql, seed data
+    http/                   # health check and Swagger UI routes
 ```
