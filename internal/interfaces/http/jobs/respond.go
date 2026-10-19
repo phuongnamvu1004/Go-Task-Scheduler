@@ -1,4 +1,4 @@
-package http
+package jobs
 
 import (
 	"encoding/json"
@@ -23,6 +23,10 @@ type jobResponse struct {
 	Task      job.Task     `json:"task"`
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt time.Time    `json:"updated_at"`
+}
+
+type errorResponse struct {
+	Error string `json:"error"`
 }
 
 func toJobResponse(j *job.Job) jobResponse {
@@ -69,15 +73,15 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 func writeError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
 	case errors.Is(err, job.ErrInvalid):
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: err.Error()})
 	case errors.Is(err, job.ErrNotFound):
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusNotFound, errorResponse{Error: err.Error()})
 	default:
 		log.Printf("%s %s: %v", r.Method, r.RequestURI, err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal server error"})
 	}
 }
 
 func writeBadRequest(w http.ResponseWriter, err error) {
-	writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+	writeJSON(w, http.StatusBadRequest, errorResponse{Error: err.Error()})
 }

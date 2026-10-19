@@ -1,0 +1,288 @@
+basePath: /
+definitions:
+  job.HTTPMethod:
+    enum:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    type: string
+    x-enum-varnames:
+    - MethodGET
+    - MethodPOST
+    - MethodPUT
+    - MethodPATCH
+    - MethodDELETE
+  job.Status:
+    enum:
+    - active
+    - paused
+    type: string
+    x-enum-varnames:
+    - StatusActive
+    - StatusPaused
+  job.TaskType:
+    enum:
+    - webhook
+    type: string
+    x-enum-varnames:
+    - TaskWebhook
+  job.WebhookTask:
+    properties:
+      body:
+        type: string
+      headers:
+        additionalProperties:
+          type: string
+        type: object
+      method:
+        $ref: '#/definitions/job.HTTPMethod'
+      url:
+        type: string
+    type: object
+  jobs.errorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  jobs.jobResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      schedule:
+        type: string
+      status:
+        $ref: '#/definitions/job.Status'
+      task: {}
+      task_type:
+        $ref: '#/definitions/job.TaskType'
+      updated_at:
+        type: string
+    type: object
+  jobs.webhookJobRequest:
+    properties:
+      name:
+        type: string
+      schedule:
+        type: string
+      task:
+        $ref: '#/definitions/job.WebhookTask'
+    type: object
+info:
+  contact: {}
+  description: Create and manage jobs that run tasks on a schedule.
+  title: Go Task Scheduler API
+  version: 0.1.0
+paths:
+  /jobs:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/jobs.jobResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/jobs.errorResponse'
+      summary: List jobs of every task type
+      tags:
+      - jobs
+  /jobs/webhook:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              allOf:
+              - $ref: '#/definitions/jobs.jobResponse'
+              - properties:
+                  task:
+                    $ref: '#/definitions/job.WebhookTask'
+                type: object
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/jobs.errorResponse'
+      summary: List webhook jobs
+      tags:
+      - webhook jobs
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Webhook job
+        in: body
+        name: job
+        required: true
+        schema:
+          $ref: '#/definitions/jobs.webhookJobRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/jobs.jobResponse'
+            - properties:
+                task:
+                  $ref: '#/definitions/job.WebhookTask'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/jobs.errorResponse'
+      summary: Create a webhook job
+      tags:
+      - webhook jobs
+  /jobs/webhook/{id}:
+    delete:
+      parameters:
+      - description: Job ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/jobs.errorResponse'
+      summary: Delete a webhook job
+      tags:
+      - webhook jobs
+    get:
+      parameters:
+      - description: Job ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/jobs.jobResponse'
+            - properties:
+                task:
+                  $ref: '#/definitions/job.WebhookTask'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/jobs.errorResponse'
+      summary: Get a webhook job
+      tags:
+      - webhook jobs
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Job ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Webhook job
+        in: body
+        name: job
+        required: true
+        schema:
+          $ref: '#/definitions/jobs.webhookJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/jobs.jobResponse'
+            - properties:
+                task:
+                  $ref: '#/definitions/job.WebhookTask'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/jobs.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/jobs.errorResponse'
+      summary: Replace a webhook job
+      tags:
+      - webhook jobs
+  /jobs/webhook/{id}/pause:
+    post:
+      parameters:
+      - description: Job ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/jobs.jobResponse'
+            - properties:
+                task:
+                  $ref: '#/definitions/job.WebhookTask'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/jobs.errorResponse'
+      summary: Pause a webhook job
+      tags:
+      - webhook jobs
+  /jobs/webhook/{id}/resume:
+    post:
+      parameters:
+      - description: Job ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/jobs.jobResponse'
+            - properties:
+                task:
+                  $ref: '#/definitions/job.WebhookTask'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/jobs.errorResponse'
+      summary: Resume a paused webhook job
+      tags:
+      - webhook jobs
+swagger: "2.0"

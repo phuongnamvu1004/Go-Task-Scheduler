@@ -3,7 +3,24 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased] - 2026-10-15
+## 2026-10-19
+
+> **Status: not tested yet.** The endpoints themselves are still untested (see 2026-10-15).
+
+### Added
+
+- Swagger UI at `/swagger` on the API port, using [swaggo](https://github.com/swaggo/swag).
+  The spec in `docs/` is generated from handler annotations with
+  `go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs`.
+- `swag` CLI pinned as a Go tool dependency in `go.mod` (`go tool swag`).
+
+### Changed
+
+- Job handlers moved to `internal/interfaces/http/jobs/`, one file per task type.
+  `JobHandler` → `jobs.Handler`, `WebhookJobHandler` → `jobs.WebhookHandler`.
+- Error responses use an `errorResponse` type (`{"error": "..."}`) so they appear in the API docs.
+
+## 2026-10-15
 
 > **Status: not tested yet.** The HTTP endpoints and the Postgres repository
 > have not been run against a live server and database, and there are no

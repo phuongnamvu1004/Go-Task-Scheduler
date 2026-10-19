@@ -11,6 +11,10 @@ import (
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/config"
 )
 
+// @title       Go Task Scheduler API
+// @version     0.1.0
+// @description Create and manage jobs that run tasks on a schedule.
+// @BasePath    /
 func main() {
 	cfg, err := config.Load()
 	if err != nil {

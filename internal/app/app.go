@@ -16,6 +16,7 @@ import (
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/config"
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/infrastructure/persistence/postgres"
 	httpapi "github.com/phuongnamvu1004/Go-Task-Scheduler/internal/interfaces/http"
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/interfaces/http/jobs"
 )
 
 // App wires all components together and manages their lifecycle.
@@ -38,7 +39,8 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger, middleware.Recoverer)
 	httpapi.NewHealthHandler().RegisterRoutes(router)
-	httpapi.NewJobHandler(jobService).RegisterRoutes(router)
+	httpapi.NewDocsHandler().RegisterRoutes(router)
+	jobs.NewHandler(jobService).RegisterRoutes(router)
 
 	return &App{
 		cfg: cfg,

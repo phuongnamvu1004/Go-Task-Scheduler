@@ -61,6 +61,18 @@ curl localhost:8080/healthz
 
 Stop it with `Ctrl+C`; the server shuts down gracefully.
 
+## API docs (Swagger)
+
+With the app running, open the Swagger UI at
+[http://localhost:8080/swagger](http://localhost:8080/swagger) (same port as the API, `PORT`).
+
+The spec in `docs/` is generated from the `@Summary`, `@Param`, `@Router`, ... comments on the handlers.
+After changing an endpoint or its request/response types, regenerate it:
+
+```sh
+go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs
+```
+
 ## Building
 
 ```sh
@@ -74,11 +86,13 @@ The project follows a Domain-Driven Design layout:
 
 ```
 cmd/scheduler/                        # entry point: load config, handle signals, run the app
+docs/                                 # generated Swagger spec (do not edit by hand)
 internal/
   app/                                # wires all components and manages their lifecycle
   config/                             # Config struct, loaded from env / .env
   domain/job/                         # Job aggregate and Repository interface
   application/                        # use cases (JobService)
   infrastructure/persistence/postgres/  # Postgres connection pool and Repository implementation
-  interfaces/http/                    # HTTP handlers and routes (health, jobs)
+  interfaces/http/                    # health and Swagger UI routes
+    jobs/                             # /jobs routes: one handler file per task type
 ```
