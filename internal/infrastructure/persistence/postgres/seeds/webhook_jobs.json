@@ -1,0 +1,118 @@
+[
+  {
+    "name": "Status page health check",
+    "schedule": "*/5 * * * *",
+    "task": {
+      "url": "https://status.example.com/health",
+      "method": "GET"
+    }
+  },
+  {
+    "name": "Daily sales report",
+    "schedule": "0 8 * * *",
+    "task": {
+      "url": "https://reports.example.com/api/v1/reports/sales",
+      "method": "POST",
+      "headers": {
+        "Authorization": "Bearer seed-token-reports",
+        "Content-Type": "application/json"
+      },
+      "body": "{\"period\":\"daily\",\"format\":\"pdf\"}"
+    }
+  },
+  {
+    "name": "Hourly product cache warm-up",
+    "schedule": "0 * * * *",
+    "task": {
+      "url": "https://shop.example.com/api/products?warm=true",
+      "method": "GET",
+      "headers": {
+        "X-Cache-Warm": "true"
+      }
+    }
+  },
+  {
+    "name": "Weekday standup reminder",
+    "schedule": "45 8 * * 1-5",
+    "task": {
+      "url": "https://chat.example.com/hooks/team-standup",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\"text\":\"Daily standup starts in 15 minutes\"}"
+    }
+  },
+  {
+    "name": "Weekly expired session cleanup",
+    "schedule": "0 3 * * 0",
+    "task": {
+      "url": "https://api.example.com/v1/sessions/expired",
+      "method": "DELETE",
+      "headers": {
+        "Authorization": "Bearer seed-token-admin"
+      }
+    }
+  },
+  {
+    "name": "Warehouse inventory sync",
+    "schedule": "*/15 * * * *",
+    "task": {
+      "url": "https://inventory.example.com/api/sync",
+      "method": "PUT",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-Api-Key": "seed-key-inventory"
+      },
+      "body": "{\"source\":\"warehouse-a\",\"full\":false}"
+    }
+  },
+  {
+    "name": "Monthly invoice generation",
+    "schedule": "0 0 1 * *",
+    "task": {
+      "url": "https://billing.example.com/api/invoices/generate",
+      "method": "POST",
+      "headers": {
+        "Authorization": "Bearer seed-token-billing",
+        "Content-Type": "application/json"
+      },
+      "body": "{\"cycle\":\"monthly\"}"
+    }
+  },
+  {
+    "name": "API token rotation",
+    "schedule": "0 */6 * * *",
+    "task": {
+      "url": "https://auth.example.com/api/tokens/rotate",
+      "method": "PATCH",
+      "headers": {
+        "Authorization": "Bearer seed-token-auth"
+      }
+    }
+  },
+  {
+    "name": "Nightly database backup",
+    "schedule": "30 2 * * *",
+    "task": {
+      "url": "https://backup.example.com/api/jobs/trigger",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\"target\":\"postgres\",\"retention_days\":7}"
+    }
+  },
+  {
+    "name": "Metrics heartbeat",
+    "schedule": "* * * * *",
+    "task": {
+      "url": "https://metrics.example.com/api/v1/push",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\"metric\":\"scheduler.heartbeat\",\"value\":1}"
+    }
+  }
+]

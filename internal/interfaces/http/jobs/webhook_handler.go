@@ -37,6 +37,50 @@ type webhookJobRequest struct {
 	Task     job.WebhookTask `json:"task"`
 }
 
+// webhookJobPatch is a partial update: fields left out of the body keep
+// their current value.
+type webhookJobPatch struct {
+	Name     *string           `json:"name"`
+	Schedule *string           `json:"schedule"`
+	Task     *webhookTaskPatch `json:"task"`
+}
+
+type webhookTaskPatch struct {
+	URL     *string            `json:"url"`
+	Method  *job.HTTPMethod    `json:"method"`
+	Headers *map[string]string `json:"headers"`
+	Body    *string            `json:"body"`
+}
+
+// apply returns j's current values with the patch laid over them.
+func (p webhookJobPatch) apply(j *job.Job) application.UpdateJobInput {
+	in := application.UpdateJobInput{Name: j.Name, Schedule: j.Schedule}
+	if p.Name != nil {
+		in.Name = *p.Name
+	}
+	if p.Schedule != nil {
+		in.Schedule = *p.Schedule
+	}
+
+	task := *j.Task.(*job.WebhookTask)
+	if t := p.Task; t != nil {
+		if t.URL != nil {
+			task.URL = *t.URL
+		}
+		if t.Method != nil {
+			task.Method = *t.Method
+		}
+		if t.Headers != nil {
+			task.Headers = *t.Headers
+		}
+		if t.Body != nil {
+			task.Body = *t.Body
+		}
+	}
+	in.Task = &task
+	return in
+}
+
 // Create godoc
 //
 //	@Summary	Create a webhook job
@@ -105,34 +149,32 @@ func (h *WebhookHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 // Update godoc
 //
-//	@Summary	Replace a webhook job
-//	@Tags		webhook jobs
-//	@Accept		json
-//	@Produce	json
-//	@Param		id	path		string				true	"Job ID"
-//	@Param		job	body		webhookJobRequest	true	"Webhook job"
-//	@Success	200	{object}	jobResponse{task=job.WebhookTask}
-//	@Failure	400	{object}	errorResponse
-//	@Failure	404	{object}	errorResponse
-//	@Router		/jobs/webhook/{id} [put]
+//	@Summary		Update a webhook job
+//	@Description	Partial update: only the fields in the body change, the rest keep their current value.
+//	@Tags			webhook jobs
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string			true	"Job ID"
+//	@Param			job	body		webhookJobPatch	true	"Fields to change"
+//	@Success		200	{object}	jobResponse{task=job.WebhookTask}
+//	@Failure		400	{object}	errorResponse
+//	@Failure		404	{object}	errorResponse
+//	@Router			/jobs/webhook/{id} [put]
 func (h *WebhookHandler) Update(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	var req webhookJobRequest
-	if err := decodeJSON(w, r, &req); err != nil {
+	var patch webhookJobPatch
+	if err := decodeJSON(w, r, &patch); err != nil {
 		writeBadRequest(w, err)
 		return
 	}
-	if _, err := h.find(r.Context(), id); err != nil {
+	existing, err := h.find(r.Context(), id)
+	if err != nil {
 		writeError(w, r, err)
 		return
 	}
 
-	j, err := h.service.UpdateJob(r.Context(), id, application.UpdateJobInput{
-		Name:     req.Name,
-		Schedule: req.Schedule,
-		Task:     &req.Task,
-	})
+	j, err := h.service.UpdateJob(r.Context(), id, patch.apply(existing))
 	if err != nil {
 		writeError(w, r, err)
 		return

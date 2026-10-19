@@ -178,6 +178,7 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "description": "Partial update: only the fields in the body change, the rest keep their current value.",
                 "consumes": [
                     "application/json"
                 ],
@@ -187,7 +188,7 @@ const docTemplate = `{
                 "tags": [
                     "webhook jobs"
                 ],
-                "summary": "Replace a webhook job",
+                "summary": "Update a webhook job",
                 "parameters": [
                     {
                         "type": "string",
@@ -197,12 +198,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Webhook job",
+                        "description": "Fields to change",
                         "name": "job",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/jobs.webhookJobRequest"
+                            "$ref": "#/definitions/jobs.webhookJobPatch"
                         }
                     }
                 ],
@@ -452,6 +453,20 @@ const docTemplate = `{
                 }
             }
         },
+        "jobs.webhookJobPatch": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "schedule": {
+                    "type": "string"
+                },
+                "task": {
+                    "$ref": "#/definitions/jobs.webhookTaskPatch"
+                }
+            }
+        },
         "jobs.webhookJobRequest": {
             "type": "object",
             "properties": {
@@ -463,6 +478,26 @@ const docTemplate = `{
                 },
                 "task": {
                     "$ref": "#/definitions/job.WebhookTask"
+                }
+            }
+        },
+        "jobs.webhookTaskPatch": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "headers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "method": {
+                    "$ref": "#/definitions/job.HTTPMethod"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         }

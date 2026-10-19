@@ -64,6 +64,15 @@ definitions:
       updated_at:
         type: string
     type: object
+  jobs.webhookJobPatch:
+    properties:
+      name:
+        type: string
+      schedule:
+        type: string
+      task:
+        $ref: '#/definitions/jobs.webhookTaskPatch'
+    type: object
   jobs.webhookJobRequest:
     properties:
       name:
@@ -72,6 +81,19 @@ definitions:
         type: string
       task:
         $ref: '#/definitions/job.WebhookTask'
+    type: object
+  jobs.webhookTaskPatch:
+    properties:
+      body:
+        type: string
+      headers:
+        additionalProperties:
+          type: string
+        type: object
+      method:
+        $ref: '#/definitions/job.HTTPMethod'
+      url:
+        type: string
     type: object
 info:
   contact: {}
@@ -196,18 +218,20 @@ paths:
     put:
       consumes:
       - application/json
+      description: 'Partial update: only the fields in the body change, the rest keep
+        their current value.'
       parameters:
       - description: Job ID
         in: path
         name: id
         required: true
         type: string
-      - description: Webhook job
+      - description: Fields to change
         in: body
         name: job
         required: true
         schema:
-          $ref: '#/definitions/jobs.webhookJobRequest'
+          $ref: '#/definitions/jobs.webhookJobPatch'
       produces:
       - application/json
       responses:
@@ -228,7 +252,7 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/jobs.errorResponse'
-      summary: Replace a webhook job
+      summary: Update a webhook job
       tags:
       - webhook jobs
   /jobs/webhook/{id}/pause:
