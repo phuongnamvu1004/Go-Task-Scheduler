@@ -91,10 +91,11 @@ docs/                       # generated Swagger spec (do not edit by hand)
 internal/
   app/                      # wires all components and manages their lifecycle
   config/                   # Config struct, loaded from env / .env
-  job/                      # job feature: Job, Repository interface, Service
+  job/                      # job feature: Job, Repository interface, Service, ChangeListener
     task/                   # Task interface + one file per task type (webhook.go, ...)
     postgres/               # Postgres implementation of job.Repository
     http/                   # /jobs routes: <type>_handler.go + <type>_dto.go per task type, helpers.go
+  scheduler/                # in-memory pool of active jobs, kept in sync with job changes
   platform/
     postgres/               # connection pool, schema.sql, seed data
     http/                   # health check and Swagger UI routes

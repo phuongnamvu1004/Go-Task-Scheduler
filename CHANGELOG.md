@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Scheduler, part 1: the job pool** (`internal/scheduler/`). Jobs are not executed yet.
+  - On startup, before the HTTP server listens, `Load` fills an in-memory pool
+    (`map[jobID]*entry`) with all active jobs.
+  - `job.Service` notifies a `job.ChangeListener` after every successful create, update, pause,
+    resume and delete. The scheduler implements it and queues each change on a channel.
+  - `Run` (a background goroutine) applies the queued changes one at a time: adds or updates
+    active jobs, removes paused or deleted ones, and ignores an update older than the one it holds.
+  - Only the `Run` goroutine touches the pool, so it needs no lock.
+- `job.ListFilter.Status`, used to load only active jobs.
+
 - `GET /health` replaces `GET /healthz`: per-service status (currently `postgres`). Returns `503` if any
   service is down; error details are logged, not returned. Each check has a 2s timeout.
   New dependencies are added as one entry in the check map in `internal/app/app.go`.

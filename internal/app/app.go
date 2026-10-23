@@ -18,13 +18,15 @@ import (
 	jobpostgres "github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/postgres"
 	platformhttp "github.com/phuongnamvu1004/Go-Task-Scheduler/internal/platform/http"
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/platform/postgres"
+	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/scheduler"
 )
 
 // App wires all components together and manages their lifecycle.
 type App struct {
-	cfg    config.Config
-	db     *pgxpool.Pool
-	server *http.Server
+	cfg       config.Config
+	db        *pgxpool.Pool
+	scheduler *scheduler.Scheduler
+	server    *http.Server
 }
 
 // New builds every component and registers the HTTP routes.
@@ -34,7 +36,9 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		return nil, err
 	}
 
-	jobService := job.NewService(jobpostgres.NewRepository(db))
+	jobRepo := jobpostgres.NewRepository(db)
+	sched := scheduler.New(jobRepo)
+	jobService := job.NewService(jobRepo, sched)
 
 	router := chi.NewRouter()
 	router.Use(middleware.Logger, middleware.Recoverer)
@@ -45,8 +49,9 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	jobhttp.NewHandler(jobService).RegisterRoutes(router)
 
 	return &App{
-		cfg: cfg,
-		db:  db,
+		cfg:       cfg,
+		db:        db,
+		scheduler: sched,
 		server: &http.Server{
 			Addr:              ":" + cfg.HTTP.Port,
 			Handler:           router,
@@ -60,7 +65,11 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 func (a *App) Run(ctx context.Context) error {
 	defer a.db.Close()
 
-	// TODO: start the scheduler loop here.
+	// Load before serving, so no change can arrive before the pool is filled.
+	if err := a.scheduler.Load(ctx); err != nil {
+		return err
+	}
+	go a.scheduler.Run(ctx)
 
 	errCh := make(chan error, 1)
 	go func() {

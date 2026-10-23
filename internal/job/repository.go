@@ -9,6 +9,7 @@ import (
 // ListFilter narrows FindAll results. Zero-value fields are ignored.
 type ListFilter struct {
 	TaskType task.Type
+	Status   Status
 }
 
 // Repository persists Jobs. Update, FindByID and Delete return ErrNotFound

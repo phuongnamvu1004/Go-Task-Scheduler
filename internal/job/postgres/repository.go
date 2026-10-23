@@ -82,8 +82,9 @@ func (r *Repository) FindAll(ctx context.Context, filter job.ListFilter) ([]*job
 	rows, err := r.pool.Query(ctx, `
 		SELECT `+jobColumns+` FROM jobs
 		WHERE ($1 = '' OR task_type = $1)
+		  AND ($2 = '' OR status = $2)
 		ORDER BY created_at`,
-		string(filter.TaskType),
+		string(filter.TaskType), string(filter.Status),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("list jobs: %w", err)

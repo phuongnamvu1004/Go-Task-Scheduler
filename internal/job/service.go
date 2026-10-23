@@ -8,11 +8,17 @@ import (
 
 // Service holds the job use cases. It works with any Task type.
 type Service struct {
-	repo Repository
+	repo     Repository
+	listener ChangeListener
 }
 
-func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+// NewService takes an optional listener (nil is allowed) that is notified
+// after every successful change.
+func NewService(repo Repository, listener ChangeListener) *Service {
+	if listener == nil {
+		listener = noopListener{}
+	}
+	return &Service{repo: repo, listener: listener}
 }
 
 type CreateInput struct {
@@ -35,6 +41,7 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (*Job, error) {
 	if err := s.repo.Create(ctx, j); err != nil {
 		return nil, err
 	}
+	s.listener.JobChanged(j)
 	return j, nil
 }
 
@@ -67,10 +74,14 @@ func (s *Service) Resume(ctx context.Context, id string) (*Job, error) {
 }
 
 func (s *Service) Delete(ctx context.Context, id string) error {
-	return s.repo.Delete(ctx, id)
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+	s.listener.JobDeleted(id)
+	return nil
 }
 
-// modify loads a job, applies change, and saves it.
+// modify loads a job, applies change, saves it and notifies the listener.
 func (s *Service) modify(ctx context.Context, id string, change func(*Job) error) (*Job, error) {
 	j, err := s.repo.FindByID(ctx, id)
 	if err != nil {
@@ -82,5 +93,6 @@ func (s *Service) modify(ctx context.Context, id string, change func(*Job) error
 	if err := s.repo.Update(ctx, j); err != nil {
 		return nil, err
 	}
+	s.listener.JobChanged(j)
 	return j, nil
 }
