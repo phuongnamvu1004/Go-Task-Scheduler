@@ -15,6 +15,32 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/health": {
+            "get": {
+                "description": "Returns 503 if any service is down. Error details are logged, not returned.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health status of each service",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.readinessResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/http.readinessResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/jobs": {
             "get": {
                 "produces": [
@@ -203,7 +229,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.webhookJobPatch"
+                            "$ref": "#/definitions/http.webhookJobPatchRequest"
                         }
                     }
                 ],
@@ -396,7 +422,29 @@ const docTemplate = `{
                 }
             }
         },
-        "http.webhookJobPatch": {
+        "http.readinessResponse": {
+            "type": "object",
+            "properties": {
+                "services": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/http.serviceStatusResponse"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.serviceStatusResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.webhookJobPatchRequest": {
             "type": "object",
             "properties": {
                 "name": {
@@ -406,7 +454,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "task": {
-                    "$ref": "#/definitions/http.webhookTaskPatch"
+                    "$ref": "#/definitions/http.webhookTaskPatchRequest"
                 }
             }
         },
@@ -424,7 +472,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.webhookTaskPatch": {
+        "http.webhookTaskPatchRequest": {
             "type": "object",
             "properties": {
                 "body": {

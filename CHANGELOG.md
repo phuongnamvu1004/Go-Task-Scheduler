@@ -5,11 +5,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-10-22
 
+### Added
+
+- `GET /health` replaces `GET /healthz`: per-service status (currently `postgres`). Returns `503` if any
+  service is down; error details are logged, not returned. Each check has a 2s timeout.
+  New dependencies are added as one entry in the check map in `internal/app/app.go`.
+
 ### Changed
 
 - Split `internal/job/http/` so handler files only hold routes and handlers. No behavior or API changes.
   - `job_dto.go`: `jobResponse`, `errorResponse`, `toJobResponse(s)`.
-  - `webhook_dto.go`: `webhookJobRequest`, `webhookJobPatch`, `webhookTaskPatch`, `apply`.
+  - `webhook_dto.go`: `webhookJobRequest`, `webhookJobPatchRequest`, `webhookTaskPatchRequest`, `apply`.
+
+### Fixed
+
+- Swagger generation failed after the patch DTOs were renamed to `webhookJobPatchRequest` /
+  `webhookTaskPatchRequest`: the `@Param` annotation on `Update` still referenced the old name.
   - `helpers.go` (was `respond.go`): `decodeJSON`, `writeJSON`, `writeError`, `writeBadRequest`.
 
 ## 2026-10-19

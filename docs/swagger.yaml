@@ -23,14 +23,28 @@ definitions:
       updated_at:
         type: string
     type: object
-  http.webhookJobPatch:
+  http.readinessResponse:
+    properties:
+      services:
+        additionalProperties:
+          $ref: '#/definitions/http.serviceStatusResponse'
+        type: object
+      status:
+        type: string
+    type: object
+  http.serviceStatusResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  http.webhookJobPatchRequest:
     properties:
       name:
         type: string
       schedule:
         type: string
       task:
-        $ref: '#/definitions/http.webhookTaskPatch'
+        $ref: '#/definitions/http.webhookTaskPatchRequest'
     type: object
   http.webhookJobRequest:
     properties:
@@ -41,7 +55,7 @@ definitions:
       task:
         $ref: '#/definitions/task.Webhook'
     type: object
-  http.webhookTaskPatch:
+  http.webhookTaskPatchRequest:
     properties:
       body:
         type: string
@@ -101,6 +115,24 @@ info:
   title: Go Task Scheduler API
   version: 0.1.0
 paths:
+  /health:
+    get:
+      description: Returns 503 if any service is down. Error details are logged, not
+        returned.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.readinessResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/http.readinessResponse'
+      summary: Health status of each service
+      tags:
+      - health
   /jobs:
     get:
       produces:
@@ -231,7 +263,7 @@ paths:
         name: job
         required: true
         schema:
-          $ref: '#/definitions/http.webhookJobPatch'
+          $ref: '#/definitions/http.webhookJobPatchRequest'
       produces:
       - application/json
       responses:

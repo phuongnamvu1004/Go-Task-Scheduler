@@ -38,7 +38,9 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 
 	router := chi.NewRouter()
 	router.Use(middleware.Logger, middleware.Recoverer)
-	platformhttp.NewHealthHandler().RegisterRoutes(router)
+	platformhttp.NewHealthHandler(map[string]platformhttp.CheckFunc{
+		"postgres": db.Ping,
+	}).RegisterRoutes(router)
 	platformhttp.NewDocsHandler().RegisterRoutes(router)
 	jobhttp.NewHandler(jobService).RegisterRoutes(router)
 

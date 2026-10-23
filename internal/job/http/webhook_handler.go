@@ -105,7 +105,7 @@ func (h *WebhookHandler) Get(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string			true	"Job ID"
-//	@Param			job	body		webhookJobPatch	true	"Fields to change"
+//	@Param			job	body		webhookJobPatchRequest	true	"Fields to change"
 //	@Success		200	{object}	jobResponse{task=task.Webhook}
 //	@Failure		400	{object}	errorResponse
 //	@Failure		404	{object}	errorResponse

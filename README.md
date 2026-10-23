@@ -55,8 +55,8 @@ PORT=9090 go run ./cmd/scheduler
 Check that it's up:
 
 ```sh
-curl localhost:8080/healthz
-# ok
+curl localhost:8080/health    # status of each service (503 if any is down)
+# {"status":"up","services":{"postgres":{"status":"up"}}}
 ```
 
 Stop it with `Ctrl+C`; the server shuts down gracefully.

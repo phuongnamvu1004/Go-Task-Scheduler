@@ -11,7 +11,7 @@ type webhookJobRequest struct {
 	Task     task.Webhook `json:"task"`
 }
 
-// webhookJobPatch is a partial update: fields left out of the body keep
+// webhookJobPatchRequest is a partial update: fields left out of the body keep
 // their current value.
 type webhookJobPatchRequest struct {
 	Name     *string                  `json:"name"`
