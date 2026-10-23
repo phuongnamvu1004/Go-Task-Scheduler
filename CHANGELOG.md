@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 2026-10-22
+
+### Changed
+
+- Split `internal/job/http/` so handler files only hold routes and handlers. No behavior or API changes.
+  - `job_dto.go`: `jobResponse`, `errorResponse`, `toJobResponse(s)`.
+  - `webhook_dto.go`: `webhookJobRequest`, `webhookJobPatch`, `webhookTaskPatch`, `apply`.
+  - `helpers.go` (was `respond.go`): `decodeJSON`, `writeJSON`, `writeError`, `writeBadRequest`.
+
 ## 2026-10-19
 
 > **Status: not tested yet.** The endpoints themselves are still untested (see 2026-10-15).

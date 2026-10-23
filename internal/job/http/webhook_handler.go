@@ -31,56 +31,6 @@ func (h *WebhookHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/{id}/resume", h.Resume)
 }
 
-type webhookJobRequest struct {
-	Name     string       `json:"name"`
-	Schedule string       `json:"schedule"`
-	Task     task.Webhook `json:"task"`
-}
-
-// webhookJobPatch is a partial update: fields left out of the body keep
-// their current value.
-type webhookJobPatch struct {
-	Name     *string           `json:"name"`
-	Schedule *string           `json:"schedule"`
-	Task     *webhookTaskPatch `json:"task"`
-}
-
-type webhookTaskPatch struct {
-	URL     *string            `json:"url"`
-	Method  *task.HTTPMethod   `json:"method"`
-	Headers *map[string]string `json:"headers"`
-	Body    *string            `json:"body"`
-}
-
-// apply returns j's current values with the patch laid over them.
-func (p webhookJobPatch) apply(j *job.Job) job.UpdateInput {
-	in := job.UpdateInput{Name: j.Name, Schedule: j.Schedule}
-	if p.Name != nil {
-		in.Name = *p.Name
-	}
-	if p.Schedule != nil {
-		in.Schedule = *p.Schedule
-	}
-
-	wt := *j.Task.(*task.Webhook)
-	if t := p.Task; t != nil {
-		if t.URL != nil {
-			wt.URL = *t.URL
-		}
-		if t.Method != nil {
-			wt.Method = *t.Method
-		}
-		if t.Headers != nil {
-			wt.Headers = *t.Headers
-		}
-		if t.Body != nil {
-			wt.Body = *t.Body
-		}
-	}
-	in.Task = &wt
-	return in
-}
-
 // Create godoc
 //
 //	@Summary	Create a webhook job
@@ -163,7 +113,7 @@ func (h *WebhookHandler) Get(w http.ResponseWriter, r *http.Request) {
 func (h *WebhookHandler) Update(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	var patch webhookJobPatch
+	var patch webhookJobPatchRequest
 	if err := decodeJSON(w, r, &patch); err != nil {
 		writeBadRequest(w, err)
 		return

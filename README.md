@@ -94,7 +94,7 @@ internal/
   job/                      # job feature: Job, Repository interface, Service
     task/                   # Task interface + one file per task type (webhook.go, ...)
     postgres/               # Postgres implementation of job.Repository
-    http/                   # /jobs routes: one handler file per task type
+    http/                   # /jobs routes: <type>_handler.go + <type>_dto.go per task type, helpers.go
   platform/
     postgres/               # connection pool, schema.sql, seed data
     http/                   # health check and Swagger UI routes
