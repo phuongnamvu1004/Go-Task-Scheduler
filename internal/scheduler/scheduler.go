@@ -20,6 +20,9 @@ type Scheduler struct {
 	// pool is owned by the Run goroutine (and by Load before Run starts),
 	// so it needs no lock.
 	pool map[string]*entry
+
+	// Pause/pending state for -tags debug builds; empty otherwise. See debug.go.
+	debugState
 }
 
 type entry struct {
@@ -36,12 +39,14 @@ type change struct {
 var _ job.ChangeListener = (*Scheduler)(nil)
 
 func New(repo job.Repository) *Scheduler {
-	return &Scheduler{
+	s := &Scheduler{
 		repo:    repo,
 		changes: make(chan change, changeBuffer),
 		done:    make(chan struct{}),
 		pool:    make(map[string]*entry),
 	}
+	s.initDebug()
+	return s
 }
 
 // Load fills the pool with every active job. Call it before Run.
@@ -66,7 +71,9 @@ func (s *Scheduler) Run(ctx context.Context) {
 	for {
 		select {
 		case c := <-s.changes:
-			s.apply(c)
+			s.handle(c)
+		case fn := <-s.debugCalls(): // never ready in normal builds
+			fn()
 		case <-ctx.Done():
 			return
 		}

@@ -47,6 +47,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	}).RegisterRoutes(router)
 	platformhttp.NewDocsHandler().RegisterRoutes(router)
 	jobhttp.NewHandler(jobService).RegisterRoutes(router)
+	sched.RegisterDebugRoutes(router) // no-op unless built with -tags debug
 
 	return &App{
 		cfg:       cfg,

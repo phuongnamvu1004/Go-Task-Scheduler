@@ -73,6 +73,25 @@ After changing an endpoint or its request/response types, regenerate it:
 go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs
 ```
 
+## Debug build
+
+Scheduler debug endpoints are compiled in only with the `debug` build tag; normal builds don't contain them.
+
+```sh
+go run -tags debug ./cmd/scheduler
+```
+
+| Endpoint | What it does |
+|---|---|
+| `POST /debug/scheduler/pause` | Stop applying job changes; new changes are parked in a pending list |
+| `GET /debug/scheduler/pending` | Parked changes, in arrival order |
+| `GET /debug/scheduler/pool` | Jobs currently in the scheduler pool |
+| `POST /debug/scheduler/resume` | Apply the parked changes in order and stop pausing |
+
+The code is in `internal/scheduler/debug.go` (`//go:build debug`) with no-op stand-ins in `debug_off.go`.
+To have your editor analyze `debug.go`, add the tag: GoLand → *Settings › Go › Build Tags*,
+VS Code → `"gopls": {"buildFlags": ["-tags=debug"]}`.
+
 ## Building
 
 ```sh

@@ -3,6 +3,19 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 2026-10-26
+
+### Added
+
+- **Scheduler debug endpoints**, only in builds with `-tags debug` (`go run -tags debug ./cmd/scheduler`):
+  `POST /debug/scheduler/pause`, `GET /debug/scheduler/pending`, `GET /debug/scheduler/pool`,
+  `POST /debug/scheduler/resume`. While paused, the scheduler keeps receiving changes but parks them
+  in a pending list instead of applying them; resume applies them in arrival order.
+  - Code is in `internal/scheduler/debug.go`; `debug_off.go` holds empty stand-ins for normal builds,
+    where the debug state is 0 bytes and the routes don't exist (404).
+  - The endpoints run their work on the scheduler's `Run` goroutine, so the pool still has a single owner.
+  - Not in the Swagger docs, since they don't exist in normal builds.
+
 ## 2026-10-22
 
 ### Added
