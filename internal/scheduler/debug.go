@@ -103,6 +103,8 @@ type debugPoolEntryResponse struct {
 	Schedule  string     `json:"schedule"`
 	Task      task.Task  `json:"task"`
 	UpdatedAt time.Time  `json:"updated_at"`
+	EntryID   int        `json:"entry_id"`
+	NextRun   *time.Time `json:"next_run,omitempty"` // empty if cron isn't running yet
 }
 
 func (s *Scheduler) debugPause(w http.ResponseWriter, r *http.Request) {
@@ -151,9 +153,14 @@ func (s *Scheduler) debugPool(w http.ResponseWriter, r *http.Request) {
 		resp = debugPoolResponse{Size: len(s.pool), Jobs: make([]debugPoolEntryResponse, 0, len(s.pool))}
 		for _, e := range s.pool {
 			j := e.job
-			resp.Jobs = append(resp.Jobs, debugPoolEntryResponse{
+			r := debugPoolEntryResponse{
 				JobID: j.ID, Name: j.Name, Status: j.Status, Schedule: j.Schedule, Task: j.Task, UpdatedAt: j.UpdatedAt,
-			})
+				EntryID: int(e.entryID),
+			}
+			if next := s.cron.Entry(e.entryID).Next; !next.IsZero() {
+				r.NextRun = &next
+			}
+			resp.Jobs = append(resp.Jobs, r)
 		}
 	})
 	sort.Slice(resp.Jobs, func(i, k int) bool { return resp.Jobs[i].Name < resp.Jobs[k].Name })

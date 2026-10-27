@@ -7,6 +7,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Scheduler, part 2: cron** using [robfig/cron v3](https://github.com/robfig/cron). Jobs fire on
+  their schedule but are only logged; execution is a TODO (roadmap step 3).
+  - Each pool entry now stores the cron `EntryID` it was registered under. Adding a job calls
+    `cron.AddFunc`; updating it removes the old entry and adds a new one (cron can't update entries);
+    pausing or deleting it calls `cron.Remove`.
+  - `Run` starts cron, and on shutdown stops it and waits for runs in progress.
+  - Cron runs in UTC, skips a run if the previous run of the same job is still going
+    (`SkipIfStillRunning`), and logs panics in a run instead of crashing (`Recover`).
+  - When a job is due, cron calls `fire` (in `scheduler.go`) on its own goroutine; it only uses the job
+    snapshot captured at registration and never touches the pool. `fire` picks the handler for the
+    job's task type with a type switch.
+  - `internal/scheduler/handler.go` holds one handler per task type; `handleWebhook` logs
+    `scheduler: job <id> (<name>) fired: webhook <METHOD> <URL>`. Sending the request is a TODO.
+  - Debug `GET /debug/scheduler/pool` also shows each job's `entry_id` and `next_run`.
+
+### Changed
+
+- `Job.Validate` parses the schedule with `cron.ParseStandard`; an invalid schedule now returns `400`
+  (resolves the TODO in `job.go`).
+
 - **Scheduler debug endpoints**, only in builds with `-tags debug` (`go run -tags debug ./cmd/scheduler`):
   `POST /debug/scheduler/pause`, `GET /debug/scheduler/pending`, `GET /debug/scheduler/pool`,
   `POST /debug/scheduler/resume`. While paused, the scheduler keeps receiving changes but parks them

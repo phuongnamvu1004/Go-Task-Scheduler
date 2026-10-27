@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/robfig/cron/v3"
+
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/task"
 )
 
@@ -11,7 +13,7 @@ import (
 type Job struct {
 	ID        string
 	Name      string
-	Schedule  string // e.g. a cron expression
+	Schedule  string // standard 5-field cron expression or descriptor, e.g. "*/5 * * * *", "@every 1m"
 	Task      task.Task
 	Status    Status
 	CreatedAt time.Time
@@ -53,7 +55,9 @@ func (j *Job) Validate() error {
 	if j.Schedule == "" {
 		return fmt.Errorf("%w: schedule is required", ErrInvalid)
 	}
-	// TODO: parse and validate the schedule expression.
+	if _, err := cron.ParseStandard(j.Schedule); err != nil {
+		return fmt.Errorf("%w: invalid schedule %q: %w", ErrInvalid, j.Schedule, err)
+	}
 	if !j.Status.Valid() {
 		return fmt.Errorf("%w: unknown status %q", ErrInvalid, j.Status)
 	}

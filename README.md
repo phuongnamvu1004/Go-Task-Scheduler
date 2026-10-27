@@ -85,7 +85,7 @@ go run -tags debug ./cmd/scheduler
 |---|---|
 | `POST /debug/scheduler/pause` | Stop applying job changes; new changes are parked in a pending list |
 | `GET /debug/scheduler/pending` | Parked changes, in arrival order |
-| `GET /debug/scheduler/pool` | Jobs currently in the scheduler pool |
+| `GET /debug/scheduler/pool` | Jobs currently in the scheduler pool, with their cron entry ID and next run time |
 | `POST /debug/scheduler/resume` | Apply the parked changes in order and stop pausing |
 
 The code is in `internal/scheduler/debug.go` (`//go:build debug`) with no-op stand-ins in `debug_off.go`.
@@ -98,6 +98,22 @@ VS Code → `"gopls": {"buildFlags": ["-tags=debug"]}`.
 go build -o bin/scheduler ./cmd/scheduler
 ./bin/scheduler
 ```
+
+## Schedules
+
+A job's `schedule` is a standard 5-field cron expression (minute, hour, day of month, month, day of week)
+or a descriptor, evaluated in **UTC**:
+
+| Schedule | Runs |
+| --- | --- |
+| `*/5 * * * *` | every 5 minutes |
+| `0 9 * * 1-5` | 09:00 UTC on weekdays |
+| `@every 30s` | every 30 seconds |
+| `@daily` / `@hourly` | midnight UTC / on the hour |
+
+An invalid schedule is rejected with `400`. Seconds fields are not supported. A run is skipped if the
+previous run of the same job is still in progress, and runs missed while the app was down are not
+caught up. Jobs currently only log when they fire; execution comes later.
 
 ## Project structure
 
@@ -114,7 +130,7 @@ internal/
     task/                   # Task interface + one file per task type (webhook.go, ...)
     postgres/               # Postgres implementation of job.Repository
     http/                   # /jobs routes: <type>_handler.go + <type>_dto.go per task type, helpers.go
-  scheduler/                # in-memory pool of active jobs, kept in sync with job changes
+  scheduler/                # pool of active jobs registered with cron (scheduler.go), one handler per task type (handler.go)
   platform/
     postgres/               # connection pool, schema.sql, seed data
     http/                   # health check and Swagger UI routes

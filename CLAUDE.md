@@ -20,7 +20,9 @@ README.md covers setup and running; CHANGELOG.md records every change and rename
   - `postgres/` – repository; tasks stored as `task_type` + `task_config` JSONB (`task_codec.go`)
   - `http/` – `/jobs` routes: `<type>_handler.go` (routes + handlers only), `<type>_dto.go`
     (request/response types + mapping such as `apply`), `job_dto.go`, `helpers.go`
-- `internal/scheduler/` – in-memory pool of active jobs; `debug.go` / `debug_off.go` build-tag pair
+- `internal/scheduler/` – in-memory pool of active jobs registered with robfig/cron; `fire` dispatches
+  by task type (`scheduler.go`); `handler.go` has one `handle<Type>` per task type; `debug.go` /
+  `debug_off.go` build-tag pair
 - `internal/platform/` – shared setup with no business logic (`postgres/` pool + `schema.sql`, `http/` health + Swagger UI)
 - `internal/app/app.go` – the only place that wires packages together and starts/stops them
 
@@ -61,12 +63,12 @@ go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs
 
 ## Roadmap
 
-1. robfig/cron: give each pool entry a cron entry ID; validate schedules with `cron.ParseStandard`
-   in `Job.Validate` (resolves the TODO in `job.go`).
+1. ~~robfig/cron: entry IDs in the pool, `cron.ParseStandard` in `Job.Validate`~~ (done, UTC).
 2. Periodic resync from Postgres as a safety net for missed notifications.
-3. Execution: runs channel + fixed worker pool; webhook timeouts.
+3. Execution: runs channel + fixed worker pool; webhook timeouts. Hook-in point: `handleWebhook`
+   in `scheduler/handler.go` (TODO).
 4. Run history in its own feature (`internal/run/`).
 
 Open decisions: single instance vs. several (duplicate runs need locking), missed runs while down
-(skip vs. catch up), cron time zone (UTC suggested). Possible later: switch `job/postgres` to GORM,
+(currently skipped; robfig/cron doesn't catch up). Possible later: switch `job/postgres` to GORM,
 a production scheduler status endpoint, authentication.
