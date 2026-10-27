@@ -203,7 +203,33 @@ const docTemplate = `{
                     }
                 }
             },
-            "put": {
+            "delete": {
+                "tags": [
+                    "webhook jobs"
+                ],
+                "summary": "Delete a webhook job",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
                 "description": "Partial update: only the fields in the body change, the rest keep their current value.",
                 "consumes": [
                     "application/json"
@@ -257,32 +283,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/http.errorResponse"
                         }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "webhook jobs"
-                ],
-                "summary": "Delete a webhook job",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Job ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
                     },
                     "404": {
                         "description": "Not Found",

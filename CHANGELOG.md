@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Manual test run** against the running app and local Postgres with a `* * * * *` webhook job:
+  create, get, patch `{"task":{"method":"POST"}}`, pause, resume, delete. After each step the pool was
+  checked via `/debug/scheduler/pool` and the firing logs. All passed.
 - **Scheduler, part 2: cron** using [robfig/cron v3](https://github.com/robfig/cron). Jobs fire on
   their schedule but are only logged; execution is a TODO (roadmap step 3).
   - Each pool entry now stores the cron `EntryID` it was registered under. Adding a job calls
@@ -24,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Breaking:** updating a webhook job is now `PATCH /jobs/webhook/{id}` (was `PUT`), since the body is a
+  partial update. `PUT` returns `405`.
 - `Job.Validate` parses the schedule with `cron.ParseStandard`; an invalid schedule now returns `400`
   (resolves the TODO in `job.go`).
 
@@ -68,7 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-10-19
 
-> **Status: not tested yet.** The endpoints themselves are still untested (see 2026-10-15).
+> **Status: tested manually on 2026-10-26.**
 
 ### Added
 
@@ -98,9 +103,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## 2026-10-15
 
-> **Status: not tested yet.** The HTTP endpoints and the Postgres repository
-> have not been run against a live server and database, and there are no
-> automated tests yet.
+> **Status: tested manually on 2026-10-26.** The endpoints and Postgres repository were run against
+> the live app and database. There are no automated tests yet.
 
 ### Added
 

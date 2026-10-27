@@ -34,6 +34,7 @@ README.md covers setup and running; CHANGELOG.md records every change and rename
   the implementation (it would also create an import cycle).
 - Comments: minimal but clear; explain why, not what.
 - Domain validation errors wrap `job.ErrInvalid` (→ 400); missing jobs return `job.ErrNotFound` (→ 404).
+- Updates are partial (`PATCH` with a `<type>JobPatchRequest` of pointer fields); there is no `PUT`.
 - Router is chi with route groups. Each task type mounts its own group under `/jobs/<type>`; handlers
   of other task types report `404` for jobs that aren't theirs.
 - Scheduler: only the `Run` goroutine touches the pool. Other goroutines send changes over a channel
@@ -45,6 +46,7 @@ README.md covers setup and running; CHANGELOG.md records every change and rename
 docker compose up -d                       # local Postgres (docker-compose.yaml, reads .env)
 go run ./cmd/scheduler                     # app on PORT (default 8080), Swagger at /swagger
 go run -tags debug ./cmd/scheduler         # adds /debug/scheduler/{pause,resume,pending,pool}
+
 
 # Check both builds: a plain build never compiles debug.go, so it can break silently.
 go build ./... && go vet ./... && go build -tags debug ./... && go vet -tags debug ./...

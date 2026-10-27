@@ -247,7 +247,7 @@ paths:
       summary: Get a webhook job
       tags:
       - webhook jobs
-    put:
+    patch:
       consumes:
       - application/json
       description: 'Partial update: only the fields in the body change, the rest keep

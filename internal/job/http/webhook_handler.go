@@ -25,7 +25,7 @@ func (h *WebhookHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/", h.Create)
 	r.Get("/", h.List)
 	r.Get("/{id}", h.Get)
-	r.Put("/{id}", h.Update)
+	r.Patch("/{id}", h.Update)
 	r.Delete("/{id}", h.Delete)
 	r.Post("/{id}/pause", h.Pause)
 	r.Post("/{id}/resume", h.Resume)
@@ -109,7 +109,7 @@ func (h *WebhookHandler) Get(w http.ResponseWriter, r *http.Request) {
 //	@Success		200	{object}	jobResponse{task=task.Webhook}
 //	@Failure		400	{object}	errorResponse
 //	@Failure		404	{object}	errorResponse
-//	@Router			/jobs/webhook/{id} [put]
+//	@Router			/jobs/webhook/{id} [patch]
 func (h *WebhookHandler) Update(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
