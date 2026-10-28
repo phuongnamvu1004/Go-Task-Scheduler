@@ -38,6 +38,23 @@ docker compose down         # stop it (data is kept in a volume)
 docker compose down -v      # stop it and delete all data
 ```
 
+## Database migrations
+
+The schema is managed with [goose](https://github.com/pressly/goose). Migrations are SQL files in
+`internal/platform/postgres/migrations/`, embedded into the binary and applied automatically on
+startup, before the app loads any jobs. goose records applied versions in a `goose_db_version` table
+in `DB_SCHEMA`, so each migration runs once per database.
+
+To change the schema, add a new file with the next number (never edit one that has been applied):
+
+```sh
+go run github.com/pressly/goose/v3/cmd/goose@v3.29.0 \
+  -dir internal/platform/postgres/migrations -s create add_something sql
+```
+
+This creates e.g. `00002_add_something.sql`; write the SQL under `-- +goose Up` (and the undo under
+`-- +goose Down`), then restart the app.
+
 ## Running
 
 Make sure Postgres is running, then from the project root:
@@ -132,6 +149,6 @@ internal/
     http/                   # /jobs routes: <type>_handler.go + <type>_dto.go per task type, helpers.go
   scheduler/                # pool of active jobs registered with cron (scheduler.go), one handler per task type (handler.go)
   platform/
-    postgres/               # connection pool, schema.sql, seed data
+    postgres/               # connection pool, migrations/ (goose), seed data
     http/                   # health check and Swagger UI routes
 ```
