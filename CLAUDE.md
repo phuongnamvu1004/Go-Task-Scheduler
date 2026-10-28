@@ -45,7 +45,8 @@ ticketed yet.
 - `internal/scheduler/` – in-memory pool of active jobs registered with robfig/cron; `fire` dispatches
   by task type (`scheduler.go`); `handler.go` has one `handle<Type>` per task type; `debug.go` /
   `debug_off.go` build-tag pair
-- `internal/platform/` – shared setup with no business logic (`postgres/` pool + `schema.sql`, `http/` health + Swagger UI)
+- `internal/platform/` – shared setup with no business logic (`postgres/` pool + goose `migrations/`,
+  `http/` health + Swagger UI)
 - `internal/app/app.go` – the only place that wires packages together and starts/stops them
 
 ## Conventions
@@ -64,25 +65,23 @@ ticketed yet.
 
 ## Commands
 
+Prefer the `Makefile` targets (`make` lists them); the raw commands are in its recipes.
+
 ```sh
-docker compose up -d                       # local Postgres (docker-compose.yaml, reads .env)
-go run ./cmd/scheduler                     # app on PORT (default 8080), Swagger at /swagger
-go run -tags debug ./cmd/scheduler         # adds /debug/scheduler/{pause,resume,pending,pool}
-
-
-# Check both builds: a plain build never compiles debug.go, so it can break silently.
-go build ./... && go vet ./... && go build -tags debug ./... && go vet -tags debug ./...
-
-# Regenerate Swagger after changing any handler annotation or request/response type.
-go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs
+make db-up                                 # local Postgres (docker-compose.yaml, reads .env)
+make run / make run-debug                  # app on PORT (default 8080); debug adds /debug/scheduler/*
+make check                                 # both builds + vets: a plain build never compiles debug.go
+make swag                                  # regenerate Swagger after changing annotations or DTOs
+make migrate-create name=<name>            # next goose migration; the app applies it on startup
+make migrate-status / migrate-up           # status (creates goose_db_version if missing) / apply without the app
 ```
 
 ## Gotchas
 
 - Renaming a type used in a `@Param`/`@Success` annotation compiles fine but breaks `swag init`
   ("cannot find type definition"). Rerun the swag command and check for `ParseComment error`.
-- `schema.sql` runs on every startup and only creates missing tables; column changes need a
-  migration tool (goose planned).
+- Schema changes go in a new `internal/platform/postgres/migrations/NNNNN_name.sql` (goose, applied on
+  startup). Never edit an applied migration; existing databases won't rerun it.
 - zsh doesn't word-split unquoted variables; spell out curl calls instead of `set -- $var` loops.
 
 ## Roadmap
@@ -90,7 +89,7 @@ go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs
 Done: robfig/cron (entry IDs in the pool, `cron.ParseStandard` in `Job.Validate`, UTC).
 
 Order agreed with the user (Jira keys in brackets):
-1. goose migrations [SCRUM-1]
+1. goose migrations + Makefile [SCRUM-1, in progress]
 2. Per-job time zone: `timezone` column, `CRON_TZ=` prefix for cron [SCRUM-2]
 3. Execution: worker pool, webhook requests with timeouts, SSRF guard, graceful shutdown [SCRUM-5,
    subtasks SCRUM-6..9]. Hook-in point: `handleWebhook` in `scheduler/handler.go` (TODO).

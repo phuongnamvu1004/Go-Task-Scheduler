@@ -1,6 +1,7 @@
--- Runs on every startup, so statements must be idempotent.
--- TODO: replace with a migration tool (e.g. goose).
+-- IF NOT EXISTS lets databases created by the old schema.sql adopt this
+-- migration unchanged.
 
+-- +goose Up
 CREATE TABLE IF NOT EXISTS jobs (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name        TEXT        NOT NULL,
@@ -13,3 +14,6 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 
 CREATE INDEX IF NOT EXISTS jobs_task_type_idx ON jobs (task_type);
+
+-- +goose Down
+DROP TABLE jobs;

@@ -3,6 +3,27 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 2026-10-28
+
+### Added
+
+- **Database migrations with [goose](https://github.com/pressly/goose)** (SCRUM-1).
+  - Migrations are SQL files in `internal/platform/postgres/migrations/`, embedded into the binary
+    and applied by `NewPool` on startup, before the scheduler loads jobs.
+  - Applied versions are tracked in `goose_db_version` (in `DB_SCHEMA`). A Postgres advisory lock
+    keeps two instances starting at the same time from running a migration twice.
+  - `00001_create_jobs.sql` is the old `schema.sql`. It still uses `IF NOT EXISTS`, so databases
+    created before this change adopt it without any changes to their tables.
+
+- **`Makefile`** for common tasks (`make` lists them): `run`, `run-debug`, `check`, `swag`, `db-up`,
+  `db-down`, `migrate-create name=...`, `migrate-up`, `migrate-status`, `migrate-down` (prints a
+  warning and waits 5s). The `migrate-*` targets run the goose CLI pinned to the library version and
+  read the same `DB_*` settings from `.env` as the app.
+
+### Removed
+
+- `internal/platform/postgres/schema.sql`; new schema changes go in a new migration file.
+
 ## 2026-10-26
 
 ### Added
