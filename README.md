@@ -27,6 +27,22 @@ cp .env.example .env
 | `DB_SCHEMA`   | `go_task_scheduler` | Schema used by the app (created on startup if missing) |
 | `DB_SSLMODE`  | `disable`           | Postgres SSL mode                    |
 
+## Make targets
+
+Common tasks are in the `Makefile`; `make` lists them:
+
+| Target | Does |
+|---|---|
+| `make run` / `make run-debug` | Run the app (debug adds `/debug/scheduler/*`) |
+| `make check` | Build and vet, with and without the `debug` tag |
+| `make swag` | Regenerate the Swagger docs |
+| `make db-up` / `make db-down` | Start / stop local Postgres |
+| `make migrate-create name=...` | Create the next migration file |
+| `make migrate-up` / `make migrate-status` | Apply pending migrations / show which are applied |
+| `make migrate-down` | Undo the latest migration (prints a warning, 5s to cancel) |
+
+The `migrate-*` targets read the same `DB_*` settings from `.env` as the app.
+
 ## Local Postgres
 
 A Postgres server for development is defined in `compose.yaml`. It uses the same `.env` credentials as the app:
@@ -45,15 +61,19 @@ The schema is managed with [goose](https://github.com/pressly/goose). Migrations
 startup, before the app loads any jobs. goose records applied versions in a `goose_db_version` table
 in `DB_SCHEMA`, so each migration runs once per database.
 
+goose does not compare your Go structs with the database: each change is a SQL file you write.
 To change the schema, add a new file with the next number (never edit one that has been applied):
 
 ```sh
-go run github.com/pressly/goose/v3/cmd/goose@v3.29.0 \
-  -dir internal/platform/postgres/migrations -s create add_something sql
+make migrate-create name=add_something    # creates e.g. 00002_add_something.sql
 ```
 
-This creates e.g. `00002_add_something.sql`; write the SQL under `-- +goose Up` (and the undo under
-`-- +goose Down`), then restart the app.
+Write the SQL under `-- +goose Up` (and the undo under `-- +goose Down`), update the repository
+queries in `internal/job/postgres/`, then restart the app or run `make migrate-up`.
+`make migrate-status` shows which migrations a database has applied.
+
+If the database is reset (e.g. `docker compose down -v`), the migrations rebuild every table on the
+next start. The data itself is not recovered.
 
 ## Running
 

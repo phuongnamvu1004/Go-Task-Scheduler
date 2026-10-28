@@ -65,20 +65,15 @@ ticketed yet.
 
 ## Commands
 
+Prefer the `Makefile` targets (`make` lists them); the raw commands are in its recipes.
+
 ```sh
-docker compose up -d                       # local Postgres (docker-compose.yaml, reads .env)
-go run ./cmd/scheduler                     # app on PORT (default 8080), Swagger at /swagger
-go run -tags debug ./cmd/scheduler         # adds /debug/scheduler/{pause,resume,pending,pool}
-
-
-# Check both builds: a plain build never compiles debug.go, so it can break silently.
-go build ./... && go vet ./... && go build -tags debug ./... && go vet -tags debug ./...
-
-# New migration (the app applies it on startup)
-go run github.com/pressly/goose/v3/cmd/goose@v3.29.0 -dir internal/platform/postgres/migrations -s create <name> sql
-
-# Regenerate Swagger after changing any handler annotation or request/response type.
-go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs
+make db-up                                 # local Postgres (docker-compose.yaml, reads .env)
+make run / make run-debug                  # app on PORT (default 8080); debug adds /debug/scheduler/*
+make check                                 # both builds + vets: a plain build never compiles debug.go
+make swag                                  # regenerate Swagger after changing annotations or DTOs
+make migrate-create name=<name>            # next goose migration; the app applies it on startup
+make migrate-status / migrate-up           # status (creates goose_db_version if missing) / apply without the app
 ```
 
 ## Gotchas
@@ -94,7 +89,7 @@ go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs
 Done: robfig/cron (entry IDs in the pool, `cron.ParseStandard` in `Job.Validate`, UTC).
 
 Order agreed with the user (Jira keys in brackets):
-1. goose migrations [SCRUM-1, in progress]
+1. goose migrations + Makefile [SCRUM-1, in progress]
 2. Per-job time zone: `timezone` column, `CRON_TZ=` prefix for cron [SCRUM-2]
 3. Execution: worker pool, webhook requests with timeouts, SSRF guard, graceful shutdown [SCRUM-5,
    subtasks SCRUM-6..9]. Hook-in point: `handleWebhook` in `scheduler/handler.go` (TODO).
