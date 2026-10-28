@@ -7,8 +7,9 @@ README.md covers setup and running; CHANGELOG.md records every change and rename
 
 - Discuss first. When asked a question or for a take, answer without editing code until told to go ahead.
 - Ask before structural choices (new folders/packages, where code lives, naming schemes).
-- Outside a Jira ticket the user commits: leave changes in the working tree. Inside a ticket, follow
-  the ticket workflow below. Never push.
+- Git actions (commit, merge, squash, push, branch deletion) only when the user explicitly asks for
+  them in that request. Otherwise just make the changes and leave them uncommitted in the working tree,
+  so the user can review the diff. This applies inside Jira tickets too. Never push unless asked.
 - Temporary tests are fine for verification, but delete them afterwards. Don't write to the user's
   local database to test; use fakes, or read-only requests against the running app.
 - After each change, update README.md (if usage/structure changed) and add a CHANGELOG.md entry.
@@ -27,10 +28,13 @@ For every ticket:
 2. Do the work. Usually the user goes through it step by step with you, and "discuss first" still
    applies. If told to "do the whole ticket", run all steps to the end without stopping; still ask
    when the ticket says "to confirm" or a structural choice isn't settled.
-3. Commit on the branch as you go; prefix every message with the key (`SCRUM-1: ...`).
-4. Finish: both builds and vets pass, README/CHANGELOG updated, subtasks done. Squash the branch
-   into one commit (`SCRUM-1: <ticket summary>`), merge it into `main` (fast-forward), and move the
-   ticket and its subtasks to Done. Leave the branch in place unless told to delete it.
+3. Leave changes uncommitted for the user to review. When asked to commit, prefix every message with
+   the key (`SCRUM-1: ...`).
+4. Finish (only when asked to finish/merge, or as part of "do the whole ticket"): both builds and
+   vets pass, README/CHANGELOG updated, subtasks done. Tidy the branch history: squash commits that
+   are noise (fixups, WIP), but keep separate commits when each is a meaningful step. Merge into
+   `main` (fast-forward) and move the ticket and its subtasks to Done. Leave the branch in place
+   unless told to delete it.
 
 Keep subtasks few and meaningful; don't split a ticket into many tiny ones. UI work is not
 ticketed yet.
