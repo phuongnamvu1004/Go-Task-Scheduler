@@ -7,11 +7,33 @@ README.md covers setup and running; CHANGELOG.md records every change and rename
 
 - Discuss first. When asked a question or for a take, answer without editing code until told to go ahead.
 - Ask before structural choices (new folders/packages, where code lives, naming schemes).
-- The user commits. Don't commit or push; leave changes in the working tree.
+- Outside a Jira ticket the user commits: leave changes in the working tree. Inside a ticket, follow
+  the ticket workflow below. Never push.
 - Temporary tests are fine for verification, but delete them afterwards. Don't write to the user's
   local database to test; use fakes, or read-only requests against the running app.
 - After each change, update README.md (if usage/structure changed) and add a CHANGELOG.md entry.
 - The user is new to Go: explain Go-specific trade-offs briefly when they matter.
+
+## Jira ticket workflow
+
+Jira site `phuongnamvu1004.atlassian.net`, project **SCRUM** (Go Task Scheduler), board "SCRUM board".
+Use the active sprint ("SCRUM Sprint 0", ends 2027-01-01) until told otherwise. Statuses:
+To Do → In Progress → In Review → Done.
+
+For every ticket:
+1. Start from an up-to-date `main` with a clean working tree. Create a branch with Jira's default
+   name, `<KEY>-<summary in kebab-case>` (e.g. `SCRUM-1-add-goose-database-migrations`). Move the
+   ticket to In Progress.
+2. Do the work. Usually the user goes through it step by step with you, and "discuss first" still
+   applies. If told to "do the whole ticket", run all steps to the end without stopping; still ask
+   when the ticket says "to confirm" or a structural choice isn't settled.
+3. Commit on the branch as you go; prefix every message with the key (`SCRUM-1: ...`).
+4. Finish: both builds and vets pass, README/CHANGELOG updated, subtasks done. Squash the branch
+   into one commit (`SCRUM-1: <ticket summary>`), merge it into `main` (fast-forward), and move the
+   ticket and its subtasks to Done. Leave the branch in place unless told to delete it.
+
+Keep subtasks few and meaningful; don't split a ticket into many tiny ones. UI work is not
+ticketed yet.
 
 ## Layout (feature-first)
 
@@ -65,12 +87,21 @@ go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs
 
 ## Roadmap
 
-1. ~~robfig/cron: entry IDs in the pool, `cron.ParseStandard` in `Job.Validate`~~ (done, UTC).
-2. Periodic resync from Postgres as a safety net for missed notifications.
-3. Execution: runs channel + fixed worker pool; webhook timeouts. Hook-in point: `handleWebhook`
-   in `scheduler/handler.go` (TODO).
-4. Run history in its own feature (`internal/run/`).
+Done: robfig/cron (entry IDs in the pool, `cron.ParseStandard` in `Job.Validate`, UTC).
+
+Order agreed with the user (Jira keys in brackets):
+1. goose migrations [SCRUM-1]
+2. Per-job time zone: `timezone` column, `CRON_TZ=` prefix for cron [SCRUM-2]
+3. Execution: worker pool, webhook requests with timeouts, SSRF guard, graceful shutdown [SCRUM-5,
+   subtasks SCRUM-6..9]. Hook-in point: `handleWebhook` in `scheduler/handler.go` (TODO).
+4. Single API token auth (`SCHEDULER_API_TOKEN`, required unless `AUTH_DISABLED=true`) [SCRUM-10]
+5. Run history in its own feature (`internal/run/`) [SCRUM-11, subtasks SCRUM-12..13]
+6. UI (later, not ticketed)
+
+Not ticketed yet: periodic resync from Postgres as a safety net for missed notifications.
+
+Goal: ship as a Docker image that anyone self-hosts (one owner per instance, so no multi-user auth).
 
 Open decisions: single instance vs. several (duplicate runs need locking), missed runs while down
 (currently skipped; robfig/cron doesn't catch up). Possible later: switch `job/postgres` to GORM,
-a production scheduler status endpoint, authentication.
+a production scheduler status endpoint, multi-user auth for a hosted version.
