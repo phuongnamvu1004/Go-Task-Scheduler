@@ -417,6 +417,9 @@ const docTemplate = `{
                 "task_type": {
                     "$ref": "#/definitions/task.Type"
                 },
+                "timezone": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -455,6 +458,11 @@ const docTemplate = `{
                 },
                 "task": {
                     "$ref": "#/definitions/http.webhookTaskPatchRequest"
+                },
+                "timezone": {
+                    "description": "\"\" resets to UTC",
+                    "type": "string",
+                    "example": "Europe/Berlin"
                 }
             }
         },
@@ -469,6 +477,11 @@ const docTemplate = `{
                 },
                 "task": {
                     "$ref": "#/definitions/task.Webhook"
+                },
+                "timezone": {
+                    "description": "IANA name; empty means UTC",
+                    "type": "string",
+                    "example": "Europe/Berlin"
                 }
             }
         },

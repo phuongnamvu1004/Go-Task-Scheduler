@@ -25,7 +25,7 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-const jobColumns = `id::text, name, schedule, status, task_type, task_config, created_at, updated_at`
+const jobColumns = `id::text, name, schedule, timezone, status, task_type, task_config, created_at, updated_at`
 
 func (r *Repository) Create(ctx context.Context, j *job.Job) error {
 	config, err := encodeTask(j.Task)
@@ -34,10 +34,10 @@ func (r *Repository) Create(ctx context.Context, j *job.Job) error {
 	}
 
 	err = r.pool.QueryRow(ctx, `
-		INSERT INTO jobs (name, schedule, status, task_type, task_config, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO jobs (name, schedule, timezone, status, task_type, task_config, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id::text`,
-		j.Name, j.Schedule, j.Status, j.Task.Type(), config, j.CreatedAt, j.UpdatedAt,
+		j.Name, j.Schedule, j.Timezone, j.Status, j.Task.Type(), config, j.CreatedAt, j.UpdatedAt,
 	).Scan(&j.ID)
 	if err != nil {
 		return fmt.Errorf("insert job: %w", err)
@@ -53,9 +53,9 @@ func (r *Repository) Update(ctx context.Context, j *job.Job) error {
 
 	tag, err := r.pool.Exec(ctx, `
 		UPDATE jobs
-		SET name = $2, schedule = $3, status = $4, task_type = $5, task_config = $6, updated_at = $7
+		SET name = $2, schedule = $3, timezone = $4, status = $5, task_type = $6, task_config = $7, updated_at = $8
 		WHERE id = $1`,
-		j.ID, j.Name, j.Schedule, j.Status, j.Task.Type(), config, j.UpdatedAt,
+		j.ID, j.Name, j.Schedule, j.Timezone, j.Status, j.Task.Type(), config, j.UpdatedAt,
 	)
 	if err != nil {
 		return notFoundOr(fmt.Errorf("update job: %w", err))
@@ -122,7 +122,7 @@ func scanJob(row pgx.Row) (*job.Job, error) {
 		taskType task.Type
 		config   []byte
 	)
-	err := row.Scan(&j.ID, &j.Name, &j.Schedule, &j.Status, &taskType, &config, &j.CreatedAt, &j.UpdatedAt)
+	err := row.Scan(&j.ID, &j.Name, &j.Schedule, &j.Timezone, &j.Status, &taskType, &config, &j.CreatedAt, &j.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

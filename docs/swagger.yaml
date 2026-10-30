@@ -20,6 +20,8 @@ definitions:
       task: {}
       task_type:
         $ref: '#/definitions/task.Type'
+      timezone:
+        type: string
       updated_at:
         type: string
     type: object
@@ -45,6 +47,10 @@ definitions:
         type: string
       task:
         $ref: '#/definitions/http.webhookTaskPatchRequest'
+      timezone:
+        description: '"" resets to UTC'
+        example: Europe/Berlin
+        type: string
     type: object
   http.webhookJobRequest:
     properties:
@@ -54,6 +60,10 @@ definitions:
         type: string
       task:
         $ref: '#/definitions/task.Webhook'
+      timezone:
+        description: IANA name; empty means UTC
+        example: Europe/Berlin
+        type: string
     type: object
   http.webhookTaskPatchRequest:
     properties:

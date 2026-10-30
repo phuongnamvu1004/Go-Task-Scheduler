@@ -12,6 +12,7 @@ type jobResponse struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
 	Schedule  string     `json:"schedule"`
+	Timezone  string     `json:"timezone"`
 	Status    job.Status `json:"status"`
 	TaskType  task.Type  `json:"task_type"`
 	Task      task.Task  `json:"task"`
@@ -28,6 +29,7 @@ func toJobResponse(j *job.Job) jobResponse {
 		ID:        j.ID,
 		Name:      j.Name,
 		Schedule:  j.Schedule,
+		Timezone:  j.Timezone,
 		Status:    j.Status,
 		TaskType:  j.Task.Type(),
 		Task:      j.Task,
