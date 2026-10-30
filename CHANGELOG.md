@@ -3,6 +3,30 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 2026-10-29
+
+> **Status: tested manually.** Migrations `00001`/`00002` applied to the existing local database and a
+> fresh schema; `make migrate-up`, `migrate-status` and `migrate-down` checked.
+
+### Added
+
+- **Per-job time zone** (SCRUM-2). Jobs have a `timezone` (IANA name, e.g. `Europe/Berlin`), default
+  `UTC`; the schedule is evaluated in it.
+  - API: `timezone` in the create request, the PATCH request (`""` resets to UTC) and every job
+    response. An unknown zone, `Local`, or a `CRON_TZ=`/`TZ=` prefix in `schedule` returns `400`.
+  - Migration `00002_add_timezone.sql`: `timezone TEXT NOT NULL DEFAULT 'UTC'`, so existing jobs get UTC.
+  - `Job.CronSpec()` builds the cron spec as `CRON_TZ=<timezone> <schedule>`; `Job.Validate` parses
+    that full spec, and the scheduler registers it with cron.
+  - `cmd/scheduler/main.go` imports `time/tzdata`, embedding the time zone database (~450 KB) so zones
+    also work in minimal Docker images that have none.
+  - Debug `GET /debug/scheduler/pool` shows each job's `timezone`, and `next_run` in that zone.
+  - Seed jobs in `seeds/webhook_jobs.json` have a `timezone` (mostly `UTC`, a few real zones).
+
+### Changed
+
+- `job.NewJob` and `Job.Update` take a `timezone` argument; `job.CreateInput` / `job.UpdateInput`
+  have a `Timezone` field.
+
 ## 2026-10-28
 
 ### Added

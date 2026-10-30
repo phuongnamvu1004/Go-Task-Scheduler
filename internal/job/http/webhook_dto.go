@@ -8,6 +8,7 @@ import (
 type webhookJobRequest struct {
 	Name     string       `json:"name"`
 	Schedule string       `json:"schedule"`
+	Timezone string       `json:"timezone" example:"Europe/Berlin"` // IANA name; empty means UTC
 	Task     task.Webhook `json:"task"`
 }
 
@@ -16,6 +17,7 @@ type webhookJobRequest struct {
 type webhookJobPatchRequest struct {
 	Name     *string                  `json:"name"`
 	Schedule *string                  `json:"schedule"`
+	Timezone *string                  `json:"timezone" example:"Europe/Berlin"` // "" resets to UTC
 	Task     *webhookTaskPatchRequest `json:"task"`
 }
 
@@ -28,12 +30,15 @@ type webhookTaskPatchRequest struct {
 
 // apply returns j's current values with the patch laid over them.
 func (p webhookJobPatchRequest) apply(j *job.Job) job.UpdateInput {
-	in := job.UpdateInput{Name: j.Name, Schedule: j.Schedule}
+	in := job.UpdateInput{Name: j.Name, Schedule: j.Schedule, Timezone: j.Timezone}
 	if p.Name != nil {
 		in.Name = *p.Name
 	}
 	if p.Schedule != nil {
 		in.Schedule = *p.Schedule
+	}
+	if p.Timezone != nil {
+		in.Timezone = *p.Timezone
 	}
 
 	wt := *j.Task.(*task.Webhook)

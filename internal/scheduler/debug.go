@@ -87,6 +87,7 @@ type debugChangeResponse struct {
 	Name      string     `json:"name,omitempty"`
 	Status    job.Status `json:"status,omitempty"`
 	Schedule  string     `json:"schedule,omitempty"`
+	Timezone  string     `json:"timezone,omitempty"`
 	Task      task.Task  `json:"task,omitempty"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
@@ -101,6 +102,7 @@ type debugPoolEntryResponse struct {
 	Name      string     `json:"name"`
 	Status    job.Status `json:"status"`
 	Schedule  string     `json:"schedule"`
+	Timezone  string     `json:"timezone"`
 	Task      task.Task  `json:"task"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	EntryID   int        `json:"entry_id"`
@@ -154,10 +156,14 @@ func (s *Scheduler) debugPool(w http.ResponseWriter, r *http.Request) {
 		for _, e := range s.pool {
 			j := e.job
 			r := debugPoolEntryResponse{
-				JobID: j.ID, Name: j.Name, Status: j.Status, Schedule: j.Schedule, Task: j.Task, UpdatedAt: j.UpdatedAt,
-				EntryID: int(e.entryID),
+				JobID: j.ID, Name: j.Name, Status: j.Status, Schedule: j.Schedule, Timezone: j.Timezone,
+				Task: j.Task, UpdatedAt: j.UpdatedAt, EntryID: int(e.entryID),
 			}
+			// cron reports Next in its own zone (UTC); show it in the job's.
 			if next := s.cron.Entry(e.entryID).Next; !next.IsZero() {
+				if loc, err := time.LoadLocation(j.Timezone); err == nil {
+					next = next.In(loc)
+				}
 				r.NextRun = &next
 			}
 			resp.Jobs = append(resp.Jobs, r)
@@ -179,7 +185,7 @@ func toDebugChange(c change) debugChangeResponse {
 	j := c.job
 	return debugChangeResponse{
 		Action: "changed", JobID: j.ID, Name: j.Name, Status: j.Status,
-		Schedule: j.Schedule, Task: j.Task, UpdatedAt: &j.UpdatedAt,
+		Schedule: j.Schedule, Timezone: j.Timezone, Task: j.Task, UpdatedAt: &j.UpdatedAt,
 	}
 }
 

@@ -24,17 +24,19 @@ func NewService(repo Repository, listener ChangeListener) *Service {
 type CreateInput struct {
 	Name     string
 	Schedule string
+	Timezone string // empty means DefaultTimezone
 	Task     task.Task
 }
 
 type UpdateInput struct {
 	Name     string
 	Schedule string
+	Timezone string // empty means DefaultTimezone
 	Task     task.Task
 }
 
 func (s *Service) Create(ctx context.Context, in CreateInput) (*Job, error) {
-	j, err := NewJob(in.Name, in.Schedule, in.Task)
+	j, err := NewJob(in.Name, in.Schedule, in.Timezone, in.Task)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,7 @@ func (s *Service) List(ctx context.Context, filter ListFilter) ([]*Job, error) {
 
 func (s *Service) Update(ctx context.Context, id string, in UpdateInput) (*Job, error) {
 	return s.modify(ctx, id, func(j *Job) error {
-		return j.Update(in.Name, in.Schedule, in.Task)
+		return j.Update(in.Name, in.Schedule, in.Timezone, in.Task)
 	})
 }
 

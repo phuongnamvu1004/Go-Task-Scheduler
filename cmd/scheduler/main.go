@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	_ "time/tzdata" // embeds the time zone database; minimal Docker images have none
 
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/app"
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/config"

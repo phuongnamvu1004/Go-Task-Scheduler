@@ -51,6 +51,7 @@ func (h *WebhookHandler) Create(w http.ResponseWriter, r *http.Request) {
 	j, err := h.service.Create(r.Context(), job.CreateInput{
 		Name:     req.Name,
 		Schedule: req.Schedule,
+		Timezone: req.Timezone,
 		Task:     &req.Task,
 	})
 	if err != nil {

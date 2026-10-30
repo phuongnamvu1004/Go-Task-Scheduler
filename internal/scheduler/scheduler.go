@@ -161,9 +161,9 @@ func (s *Scheduler) remove(id, reason string) {
 // schedule registers j with cron and returns its entry ID (0 if the
 // schedule is invalid, which Job.Validate should already have prevented).
 func (s *Scheduler) schedule(j *job.Job) cron.EntryID {
-	id, err := s.cron.AddFunc(j.Schedule, func() { s.fire(j) })
+	id, err := s.cron.AddFunc(j.CronSpec(), func() { s.fire(j) })
 	if err != nil {
-		log.Printf("scheduler: job %s has invalid schedule %q: %v", j.ID, j.Schedule, err)
+		log.Printf("scheduler: job %s has invalid schedule %q: %v", j.ID, j.CronSpec(), err)
 		return 0
 	}
 	return id

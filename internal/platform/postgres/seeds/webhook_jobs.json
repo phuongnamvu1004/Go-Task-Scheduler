@@ -2,6 +2,7 @@
   {
     "name": "Status page health check",
     "schedule": "*/5 * * * *",
+    "timezone": "UTC",
     "task": {
       "url": "https://status.example.com/health",
       "method": "GET"
@@ -10,6 +11,7 @@
   {
     "name": "Daily sales report",
     "schedule": "0 8 * * *",
+    "timezone": "Europe/Berlin",
     "task": {
       "url": "https://reports.example.com/api/v1/reports/sales",
       "method": "POST",
@@ -23,6 +25,7 @@
   {
     "name": "Hourly product cache warm-up",
     "schedule": "0 * * * *",
+    "timezone": "UTC",
     "task": {
       "url": "https://shop.example.com/api/products?warm=true",
       "method": "GET",
@@ -34,6 +37,7 @@
   {
     "name": "Weekday standup reminder",
     "schedule": "45 8 * * 1-5",
+    "timezone": "America/New_York",
     "task": {
       "url": "https://chat.example.com/hooks/team-standup",
       "method": "POST",
@@ -46,6 +50,7 @@
   {
     "name": "Weekly expired session cleanup",
     "schedule": "0 3 * * 0",
+    "timezone": "UTC",
     "task": {
       "url": "https://api.example.com/v1/sessions/expired",
       "method": "DELETE",
@@ -57,6 +62,7 @@
   {
     "name": "Warehouse inventory sync",
     "schedule": "*/15 * * * *",
+    "timezone": "UTC",
     "task": {
       "url": "https://inventory.example.com/api/sync",
       "method": "PUT",
@@ -70,6 +76,7 @@
   {
     "name": "Monthly invoice generation",
     "schedule": "0 0 1 * *",
+    "timezone": "America/Los_Angeles",
     "task": {
       "url": "https://billing.example.com/api/invoices/generate",
       "method": "POST",
@@ -83,6 +90,7 @@
   {
     "name": "API token rotation",
     "schedule": "0 */6 * * *",
+    "timezone": "UTC",
     "task": {
       "url": "https://auth.example.com/api/tokens/rotate",
       "method": "PATCH",
@@ -94,6 +102,7 @@
   {
     "name": "Nightly database backup",
     "schedule": "30 2 * * *",
+    "timezone": "Asia/Ho_Chi_Minh",
     "task": {
       "url": "https://backup.example.com/api/jobs/trigger",
       "method": "POST",
@@ -106,6 +115,7 @@
   {
     "name": "Metrics heartbeat",
     "schedule": "* * * * *",
+    "timezone": "UTC",
     "task": {
       "url": "https://metrics.example.com/api/v1/push",
       "method": "POST",

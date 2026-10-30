@@ -93,8 +93,8 @@ make migrate-status / migrate-up           # status (creates goose_db_version if
 Done: robfig/cron (entry IDs in the pool, `cron.ParseStandard` in `Job.Validate`, UTC).
 
 Order agreed with the user (Jira keys in brackets):
-1. goose migrations + Makefile [SCRUM-1, in progress]
-2. Per-job time zone: `timezone` column, `CRON_TZ=` prefix for cron [SCRUM-2]
+1. ~~goose migrations + Makefile [SCRUM-1]~~ (done)
+2. Per-job time zone: `timezone` column, `Job.CronSpec()` adds the `CRON_TZ=` prefix [SCRUM-2, in progress]
 3. Execution: worker pool, webhook requests with timeouts, SSRF guard, graceful shutdown [SCRUM-5,
    subtasks SCRUM-6..9]. Hook-in point: `handleWebhook` in `scheduler/handler.go` (TODO).
 4. Single API token auth (`SCHEDULER_API_TOKEN`, required unless `AUTH_DISABLED=true`) [SCRUM-10]
