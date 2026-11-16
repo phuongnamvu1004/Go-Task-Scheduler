@@ -37,7 +37,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 
 	jobRepo := jobpostgres.NewRepository(db)
-	sched := scheduler.New(jobRepo)
+	sched := scheduler.New(jobRepo, cfg.Scheduler.Workers)
 	jobService := job.NewService(jobRepo, sched)
 
 	router := chi.NewRouter()

@@ -4,19 +4,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/robfig/cron/v3"
 
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job"
-	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/task"
 )
 
 const changeBuffer = 100
 
 // Scheduler keeps an in-memory pool of active jobs and registers each one
 // with cron. The pool is filled by Load and kept in sync by change
-// notifications from job.Service.
+// notifications from job.Service. Due jobs are executed by a fixed pool of
+// workers (worker.go).
 type Scheduler struct {
 	repo    job.Repository
 	changes chan change
@@ -26,6 +27,11 @@ type Scheduler struct {
 	// pool is owned by the Run goroutine (and by Load before Run starts),
 	// so it needs no lock.
 	pool map[string]*entry
+
+	runs     chan run       // due runs, filled by fire, drained by workers
+	workers  int            // size of the worker pool
+	wg       sync.WaitGroup // running workers
+	inFlight sync.Map       // IDs of jobs queued or running; used from cron and worker goroutines
 
 	// Pause/pending state for -tags debug builds; empty otherwise. See debug.go.
 	debugState
@@ -44,7 +50,7 @@ type change struct {
 
 var _ job.ChangeListener = (*Scheduler)(nil)
 
-func New(repo job.Repository) *Scheduler {
+func New(repo job.Repository, workers int) *Scheduler {
 	logger := cron.PrintfLogger(log.Default())
 	s := &Scheduler{
 		repo:    repo,
@@ -52,12 +58,13 @@ func New(repo job.Repository) *Scheduler {
 		done:    make(chan struct{}),
 		cron: cron.New(
 			cron.WithLocation(time.UTC),
-			cron.WithChain(
-				cron.Recover(logger),            // a panicking run is logged, not fatal
-				cron.SkipIfStillRunning(logger), // no overlapping runs of one job
-			),
+			// fire only queues a run, so overlap is prevented by inFlight,
+			// not cron.SkipIfStillRunning.
+			cron.WithChain(cron.Recover(logger)),
 		),
-		pool: make(map[string]*entry),
+		pool:    make(map[string]*entry),
+		runs:    make(chan run, runQueueSize),
+		workers: workers,
 	}
 	s.initDebug()
 	return s
@@ -79,13 +86,17 @@ func (s *Scheduler) Load(ctx context.Context) error {
 	return nil
 }
 
-// Run starts cron and applies change notifications to the pool, one at a
-// time, until ctx is cancelled. It then stops cron and waits for runs in
-// progress to finish.
+// Run starts the workers and cron, and applies change notifications to the
+// pool, one at a time, until ctx is cancelled. It then stops cron and waits
+// for queued and running jobs to finish.
 func (s *Scheduler) Run(ctx context.Context) {
 	defer close(s.done)
+	s.startWorkers()
 	s.cron.Start()
-	defer func() { <-s.cron.Stop().Done() }()
+	defer func() {
+		<-s.cron.Stop().Done() // no more fire calls after this
+		s.stopWorkers()
+	}()
 	for {
 		select {
 		case c := <-s.changes:
@@ -167,16 +178,4 @@ func (s *Scheduler) schedule(j *job.Job) cron.EntryID {
 		return 0
 	}
 	return id
-}
-
-// fire runs on a cron goroutine, not on Run, so it must not touch the pool.
-// j is the snapshot captured when the job was scheduled and is never modified.
-// It passes the job to the handler for its task type (see handler.go).
-func (s *Scheduler) fire(j *job.Job) {
-	switch t := j.Task.(type) {
-	case *task.Webhook:
-		handleWebhook(j, t)
-	default:
-		log.Printf("scheduler: job %s has no handler for task type %q", j.ID, j.Task.Type())
-	}
 }

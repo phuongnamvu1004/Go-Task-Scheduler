@@ -1,7 +1,8 @@
 //go:build debug
 
 // Debug-only tools for watching the scheduler, compiled in only with
-// `-tags debug`. Delete this file and debug_off.go to remove them.
+// `-tags debug`. Delete this file and debug_off.go (and the debugf calls)
+// to remove them.
 
 package scheduler
 
@@ -30,6 +31,10 @@ type debugState struct {
 func (s *Scheduler) initDebug() { s.calls = make(chan func()) }
 
 func (s *Scheduler) debugCalls() <-chan func() { return s.calls }
+
+// debugf logs detail that is only useful while watching the scheduler,
+// such as which worker ran a job.
+func debugf(format string, args ...any) { log.Printf(format, args...) }
 
 // handle parks changes while paused instead of applying them.
 func (s *Scheduler) handle(c change) {

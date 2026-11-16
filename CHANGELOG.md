@@ -3,6 +3,42 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 2026-11-15
+
+> **Status: verified with a temporary test (deleted), not yet run against the app.**
+
+### Added
+
+- **Worker pool for job execution** (SCRUM-6). Cron no longer runs handlers itself:
+  - `fire` (cron goroutine) only queues the run on a buffered channel (`runQueueSize`, 100). If the
+    queue is full, the run is skipped and logged, so cron never blocks.
+  - `WORKERS` goroutines (env `WORKERS`, default `4`, must be ≥ 1) take runs and call the handler for
+    the task type (`dispatch`, moved from `fire`). A panicking handler is logged, not fatal.
+  - One run per job at a time: a job that is still queued or running is skipped (and logged) when it
+    is due again. This replaces `cron.SkipIfStillRunning`, which no longer helps once `fire` returns
+    immediately. The check is per job ID, so it also covers a job updated mid-run.
+  - On shutdown, `Run` stops cron, then lets the workers finish the queued runs and waits for them.
+  - Debug builds (`make run-debug`) log each run with the worker number that took it, how long it
+    waited in the queue, and how long it took (`debugf`, a no-op in normal builds). Skipped runs and
+    panics are always logged.
+- New file `internal/scheduler/worker.go`.
+
+### Changed
+
+- `scheduler.New` takes the worker count; `config.Config` has a `Scheduler` section.
+- **Docs reorganized.** README.md is now a short index: intro, requirements, quick start, links to the
+  guides, project structure. The rest moved to guides in `docs/`:
+  - `docs/setup.md`: configuration, make targets, local Postgres, migrations, running, building,
+    Swagger, debug build.
+  - `docs/schedules.md`: cron syntax, time zones, DST, rules.
+  - `docs/worker-pool.md` (new): how due jobs are queued and executed, `WORKERS`, logs, limits.
+- **Swagger spec moved** from `docs/` to `docs/swagger/` (Go package `swagger`). `make swag` writes
+  there; `internal/platform/http/docs_handler.go` imports the new path. The Swagger UI URL is unchanged.
+
+### Fixed
+
+- Setup docs referred to `compose.yaml`; the file is `docker-compose.yaml`.
+
 ## 2026-10-29
 
 > **Status: tested manually.** Migrations `00001`/`00002` applied to the existing local database and a

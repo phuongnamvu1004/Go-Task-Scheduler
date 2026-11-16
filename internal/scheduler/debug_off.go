@@ -16,3 +16,5 @@ func (s *Scheduler) handle(c change) { s.apply(c) }
 func (s *Scheduler) debugCalls() <-chan func() { return nil }
 
 func (s *Scheduler) RegisterDebugRoutes(chi.Router) {}
+
+func debugf(string, ...any) {}
