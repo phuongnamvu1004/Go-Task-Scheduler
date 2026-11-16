@@ -7,8 +7,9 @@ import (
 	"github.com/phuongnamvu1004/Go-Task-Scheduler/internal/job/task"
 )
 
-// One handler per task type, called by fire when a job is due. A new task
-// type needs a handler here and a case in fire.
+// One handler per task type, called by a worker (via dispatch in worker.go)
+// when a job is due. A new task type needs a handler here and a case in
+// dispatch.
 
 func handleWebhook(j *job.Job, t *task.Webhook) {
 	log.Printf("scheduler: job %s (%s) fired: webhook %s %s", j.ID, j.Name, t.Method, t.URL)

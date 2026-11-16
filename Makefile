@@ -32,7 +32,7 @@ check: ## Build and vet, with and without the debug tag
 	go build ./... && go vet ./... && go build -tags debug ./... && go vet -tags debug ./...
 
 swag: ## Regenerate the Swagger docs
-	go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs
+	go tool swag init -g cmd/scheduler/main.go --parseInternal -o docs/swagger
 
 db-up: ## Start local Postgres
 	docker compose up -d

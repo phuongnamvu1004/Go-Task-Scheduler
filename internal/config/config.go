@@ -5,19 +5,25 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	HTTP     HTTPConfig
-	Database DatabaseConfig
+	HTTP      HTTPConfig
+	Database  DatabaseConfig
+	Scheduler SchedulerConfig
 }
 
 type HTTPConfig struct {
 	Port            string
 	ShutdownTimeout time.Duration
+}
+
+type SchedulerConfig struct {
+	Workers int // goroutines that execute due jobs
 }
 
 type DatabaseConfig struct {
@@ -68,6 +74,12 @@ func Load() (Config, error) {
 	if cfg.Database.User == "" || cfg.Database.Name == "" {
 		return Config{}, errors.New("DB_USER and DB_NAME must be set")
 	}
+
+	workers, err := strconv.Atoi(getEnv("WORKERS", "4"))
+	if err != nil || workers < 1 {
+		return Config{}, fmt.Errorf("WORKERS must be a positive integer, got %q", os.Getenv("WORKERS"))
+	}
+	cfg.Scheduler.Workers = workers
 
 	return cfg, nil
 }
